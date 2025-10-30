@@ -1,8 +1,17 @@
-# Node.js OAuth 2.0 Quickstart
+# 🚗 SIMPA Dealers App - HubSpot Integration
 
-A quickstart app for integrators looking to use HubSpot's OAuth 2.0. Written in Node.js.
+Aplicación moderna de integración OAuth 2.0 con HubSpot para SIMPA Dealers. Actualizada con el SDK oficial de HubSpot y las mejores prácticas de 2024.
 
-_**Note:** This app does not store any data in a persistent way, so restarting the app will clear the retrieved access tokens._
+## ✨ Mejoras sobre la versión original
+
+- ✅ **SDK Oficial de HubSpot** (`@hubspot/api-client`) en lugar de peticiones HTTP manuales
+- ✅ **Axios** en lugar de la biblioteca deprecada `request`
+- ✅ **Interfaz web moderna** con diseño responsive y gradientes
+- ✅ **Manejo de errores mejorado** con mensajes claros
+- ✅ **Webhooks configurados** para eventos de contactos
+- ✅ **TypeScript-ready** estructura preparada para migración a TS
+
+_**Nota:** Esta app almacena tokens en memoria. Para producción, usar base de datos._
 
 ## What the app does
 
@@ -35,38 +44,109 @@ Before running the quickstart app, make sure you have:
 
 _**Note:** You must be a super-admin for the account that you want to install the app in._
 
-## Option 1: Running locally using Node.js
+## 🚀 Instalación y Configuración
 
-1. Clone the repository:
+### 1. Clonar el repositorio
+
+```bash
+git clone https://github.com/pablolorenzatti/SIMPA-DEALERS-APP.git
+cd SIMPA-DEALERS-APP
+```
+
+### 2. Configurar credenciales de HubSpot
+
+1. Crea una cuenta de desarrollador en [HubSpot](https://developers.hubspot.com/)
+2. Crea una nueva app en el [panel de desarrolladores](https://app.hubspot.com/developers)
+3. Copia el archivo `.env.example` y renómbralo a `.env`:
    ```bash
-   $ git clone git@github.com:HubSpot/oauth-quickstart-nodejs.git
+   cp .env.example .env
    ```
-2. Create a **`.env`** file in the root of the repository with the ID and secret for your app (found on the app settings page), eg:
+4. Edita `.env` y agrega tus credenciales:
+   ```env
+   CLIENT_ID=tu-client-id-de-hubspot
+   CLIENT_SECRET=tu-client-secret-de-hubspot
+   SCOPE=crm.objects.contacts.read
+   PORT=3000
    ```
-   CLIENT_ID='xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx'
-   CLIENT_SECRET='yyyyyyyy-yyyy-yyyy-yyyy-yyyyyyyyyyyy'
-   SCOPE='crm.contacts.read,forms'
-   ```
-   You can also add a `SCOPE` environment variable to specify a custom set of scopes. The scopes can be separated by a comma, space, or URL-encoded space (`%20`)
-3. From the root of the repository, run:
-   ```bash
-   $ yarn install
-   $ yarn start
-   ```
-4. Open your browser to `http://localhost:3000/install` to kick off the OAuth 2.0 flow
 
----
-
-## Option 2: Running in a Docker container
-
-1. Build an image of the quickstart app
-
+**Importante:** En la configuración de tu app de HubSpot, agrega esta URL de redirección:
 ```
-$ docker build -t hs-oauth-quickstart:latest git://github.com/HubSpot/oauth-quickstart-nodejs.git
+http://localhost:3000/oauth-callback
 ```
 
-2. Run a container with the new image
+### 3. Instalar dependencias
 
+```bash
+npm install
+# o con yarn
+yarn install
 ```
-$ docker run --init -it -p 3000:3000 -e CLIENT_SECRET=$CLIENT_SECRET -e CLIENT_ID=$CLIENT_ID -e SCOPE=contacts,forms hs-oauth-quickstart:latest
+
+### 4. Iniciar la aplicación
+
+```bash
+npm start
+# Para desarrollo con auto-reload:
+npm run dev
 ```
+
+La aplicación se abrirá automáticamente en `http://localhost:3000`
+
+### 5. Autorizar la aplicación
+
+1. Visita `http://localhost:3000/install` o haz clic en el botón "Conectar con HubSpot"
+2. Autoriza la aplicación en HubSpot
+3. Serás redirigido de vuelta y verás los datos de tu primer contacto
+
+## 🐳 Docker (Opcional)
+
+También puedes ejecutar la aplicación con Docker:
+
+```bash
+# Construir la imagen
+docker build -t simpa-dealers-app .
+
+# Ejecutar el contenedor
+docker run --init -it -p 3000:3000 \
+  -e CLIENT_ID=tu-client-id \
+  -e CLIENT_SECRET=tu-client-secret \
+  -e SCOPE=crm.objects.contacts.read \
+  simpa-dealers-app
+```
+
+## 📚 Características Principales
+
+- **OAuth 2.0**: Flujo completo de autorización con HubSpot
+- **SDK Oficial**: Uso del cliente oficial `@hubspot/api-client`
+- **Gestión de Tokens**: Refresh automático de access tokens
+- **Interfaz Moderna**: UI responsive con gradientes y diseño atractivo
+- **Webhooks**: Endpoint configurado para recibir eventos de HubSpot
+- **Logs Claros**: Mensajes informativos en consola para debugging
+- **Auto-reload**: Modo desarrollo con `nodemon`
+
+## 🛠️ Tecnologías
+
+- Node.js
+- Express.js
+- HubSpot API Client SDK v11
+- Axios
+- Node-Cache
+- Express-Session
+
+## 📖 Documentación Adicional
+
+- [HubSpot OAuth 2.0 Documentation](https://developers.hubspot.com/docs/api/oauth)
+- [HubSpot API Client SDK](https://github.com/HubSpot/hubspot-api-nodejs)
+- [HubSpot Developer Portal](https://developers.hubspot.com/)
+
+## 🤝 Contribuir
+
+Las contribuciones son bienvenidas. Por favor, abre un issue o pull request.
+
+## 📄 Licencia
+
+MIT License - ver archivo LICENSE para más detalles
+
+## 👨‍💻 Autor
+
+Pablo Lorenzatti - [GitHub](https://github.com/pablolorenzatti)
