@@ -11,12 +11,18 @@
     },
     "api/bulk-models.js": {
       "includeFiles": "src/**"
-     },
+    },
     "api/check-lead-status.js": {
       "includeFiles": "src/**"
     },
     "api/webhook-enrich.js": {
       "includeFiles": "src/**"
+    },
+    "api/admin/index.js": {
+      "maxDuration": 10
+    },
+    "api/admin/config.js": {
+      "maxDuration": 10
     }
   }
 }
