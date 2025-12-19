@@ -1,0 +1,25 @@
+node_modules/
+vercel/node_modules/
+vercel/.vercel
+
+# Archivos de entorno y credenciales
+.env
+.env.local
+.env.*.local
+dev-redirect/.env
+*.env
+!*.env.example
+
+# Backups
+.backup/
+
+# Archivos del sistema
+.DS_Store
+*.log
+*.swp
+*.swo
+*~
+
+# Archivos temporales
+*.tmp
+.cache/

@@ -1,0 +1,14 @@
+{
+  "name": "simpa-oauth-server",
+  "version": "1.0.0",
+  "description": "Servidor automático para intercambio OAuth de SIMPA",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "keywords": ["hubspot", "oauth", "simpa"],
+  "author": "",
+  "license": "ISC"
+}
+

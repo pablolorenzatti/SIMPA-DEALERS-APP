@@ -1,0 +1,132 @@
+{
+  "MOTO MORINI": {
+    "label": "Moto Morini",
+    "models": [
+      "X-Cape 650",
+      "X-Cape",
+      "Seiemmezzo STR",
+      "Seiemmezzo SCR",
+      "Calibro Custom",
+      "Calibro Bagger",
+      "X-Cape 700",
+      "Alltrhike 450"
+    ]
+  },
+  "ROYAL ENFIELD": {
+    "label": "Royal Enfield",
+    "models": [
+      "Classic 350",
+      "Continental GT 650",
+      "Himalayan",
+      "Himalayan 450",
+      "HNTR 350",
+      "Interceptor 650",
+      "Meteor 350",
+      "Scram 411",
+      "Shotgun",
+      "Super Meteor 650",
+      "GRR 450",
+      "BEAR 650"
+    ]
+  },
+  "KTM": {
+    "label": "KTM",
+    "models": [
+      "200 Duke",
+      "250 DUKE",
+      "390 Duke",
+      "RC 200",
+      "RC 390",
+      "390 Adventure",
+      "390 Enduro R",
+      "390 Adventure X",
+      "390 Adventure R",
+      "790 Adventure",
+      "790 Adventure R",
+      "890 Adventure R",
+      "1290 Super Adventure S",
+      "1290 Super Adventure R",
+      "SX-F 350",
+      "EXC-F 350"
+    ]
+  },
+  "CF MOTO": {
+    "label": "CF Moto",
+    "models": [
+      "CFORCE 110",
+      "CFORCE 450 TOURING",
+      "CFORCE 625 TOURING",
+      "CFORCE 1000",
+      "UFORCE 600",
+      "UFORCE 1000",
+      "UFORCE 1000 XL",
+      "ZFORCE 800 EX",
+      "ZFORCE 950 SPORT-4 Plazas",
+      "ZFORCE 1000 SPORT R",
+      "CX - 2E",
+      "CX - 5E",
+      "CFORCE 850 TOURING",
+      "Otro Modelo CFMOTO",
+      "ZFORCE 550",
+      "CFORCE 850",
+      "UFORCE 1000 PRO",
+      "ZFORCE 950 SPORT-4",
+      "UFORCE U10 PRO"
+    ]
+  },
+  "QJ MOTOR": {
+    "label": "QJ Motor",
+    "models": [
+      "SRT 550",
+      "SRT 700",
+      "SRT 800 XS",
+      "SRK 400",
+      "SRK 600",
+      "FORT 350",
+      "SRV 300",
+      "SRT 700X",
+      "SRV 600",
+      "SRT 550 SX"
+    ]
+  },
+  "VESPA": {
+    "label": "Vespa",
+    "models": [
+      "VXL 150",
+      "GTS 300 Super",
+      "GTS 300 Super Sport",
+      "GTS 300 Super Tech",
+      "Dual Edición Limitada"
+    ]
+  },
+  "APRILIA": {
+    "label": "Aprilia",
+    "models": [
+      "SR 160",
+      "SXR 160",
+      "RS 660",
+      "Tuareg 660"
+    ]
+  },
+  "MOTO GUZZI": {
+    "label": "Moto Guzzi",
+    "models": [
+      "V7 Stone",
+      "V7 Special",
+      "V85TT",
+      "Stelvio",
+      "Stone Corsa"
+    ]
+  },
+  "PIAGGIO": {
+    "label": "Piaggio",
+    "models": [
+      "Beverly 400",
+      "MP3 310"
+    ]
+  },
+  "MOTOPLEX": {
+    "label": "Motoplex",
+    "models": []
+  }
+}

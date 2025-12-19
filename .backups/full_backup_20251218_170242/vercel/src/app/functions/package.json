@@ -1,0 +1,12 @@
+{
+  "name": "workflow-action-custom-function",
+  "version": "1.0.0",
+  "description": "Function for workflow action to configure external account properties",
+  "main": "workflow-action-custom.js",
+  "dependencies": {
+    "@hubspot/api-client": "^10.0.0",
+    "@vercel/kv": "^0.2.3",
+    "@upstash/redis": "^1.30.0"
+  }
+}
+

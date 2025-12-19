@@ -1,0 +1,12 @@
+{
+    "name": "simpa-local-scripts",
+    "version": "1.0.0",
+    "description": "Scripts locales para SIMPA",
+    "main": "scripts/sync-global-properties.js",
+    "scripts": {
+        "sync-global": "node scripts/sync-global-properties.js"
+    },
+    "dependencies": {
+        "@hubspot/api-client": "^10.0.0"
+    }
+}
