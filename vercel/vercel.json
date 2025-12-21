@@ -19,10 +19,10 @@
       "includeFiles": "src/**"
     },
     "api/admin/index.js": {
-      "maxDuration": 10
+      "maxDuration": 60
     },
     "api/admin/config.js": {
-      "maxDuration": 10
+      "maxDuration": 60
     }
   }
 }

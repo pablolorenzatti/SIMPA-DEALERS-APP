@@ -51,23 +51,40 @@ module.exports = async (req, res) => {
         }
 
         if (req.method === 'POST') {
-            const { type, data } = req.body;
+            const body = req.body;
 
-            if (!data) {
-                return res.status(400).json({ error: 'Data is required' });
+            // Updated frontend payload: { razonesSociales: {...}, modelsByBrand: {...} }
+            if (body.razonesSociales || body.modelsByBrand) {
+                const results = {};
+
+                if (body.razonesSociales) {
+                    await ConfigService.saveRazonesSociales(body.razonesSociales);
+                    results.razonesSociales = 'updated';
+                }
+
+                if (body.modelsByBrand) {
+                    await ConfigService.saveModelsByBrand(body.modelsByBrand);
+                    results.modelsByBrand = 'updated';
+                }
+
+                return res.status(200).json({ success: true, results });
             }
 
-            if (type === 'razonesSociales') {
-                await ConfigService.saveRazonesSociales(data);
-                return res.status(200).json({ success: true, message: 'Razones Sociales updated' });
+            // Legacy/Fallback format: { type: '...', data: ... }
+            const { type, data } = body;
+            if (type && data) {
+                if (type === 'razonesSociales') {
+                    await ConfigService.saveRazonesSociales(data);
+                    return res.status(200).json({ success: true, message: 'Razones Sociales updated' });
+                }
+
+                if (type === 'modelsByBrand') {
+                    await ConfigService.saveModelsByBrand(data);
+                    return res.status(200).json({ success: true, message: 'Models updated' });
+                }
             }
 
-            if (type === 'modelsByBrand') {
-                await ConfigService.saveModelsByBrand(data);
-                return res.status(200).json({ success: true, message: 'Models updated' });
-            }
-
-            return res.status(400).json({ error: 'Invalid config type' });
+            return res.status(400).json({ error: 'Data is required (razonesSociales or modelsByBrand)' });
         }
 
         return res.status(405).json({ error: 'Method not allowed' });
