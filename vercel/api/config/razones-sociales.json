@@ -120,7 +120,7 @@
       "QJ MOTOR CABA VILLA LURO"
     ],
     "pipelineMapping": {
-      "default": {
+      "QJ Motor": {
         "pipeline": "default",
         "stage": "751513795"
       }
