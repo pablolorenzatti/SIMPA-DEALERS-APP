@@ -13,6 +13,9 @@ const MODELS_BY_BRAND_PATH_ALT = path.join(__dirname, '../../src/config/models-b
 // Nuevos paths de respaldo para Vercel structure
 const RAZONES_SOCIALES_PATH_API = path.join(__dirname, '../config/razones-sociales.json');
 const MODELS_BY_BRAND_PATH_API = path.join(__dirname, '../config/models-by-brand.json');
+const SIMPA_PIPELINES_PATH = path.join(process.cwd(), 'src/config/simpa-pipelines.json');
+const SIMPA_PIPELINES_PATH_ALT = path.join(__dirname, '../../src/config/simpa-pipelines.json');
+const SIMPA_PIPELINES_PATH_API = path.join(__dirname, '../config/simpa-pipelines.json');
 
 // Helper para detectar credenciales y filtrar URLs incorrectas (TCP vs REST)
 function getKvCredentials() {
@@ -204,6 +207,40 @@ const ConfigService = {
         }
         await kvClient.set('config:models-by-brand', data);
         console.log('[ConfigService] 💾 Modelos guardados en KV');
+        return true;
+    },
+
+    /**
+     * Obtiene la configuración de Pipelines de SIMPA
+     */
+    async getSimpaPipelines() {
+        try {
+            if (kvClient) {
+                const cached = await kvClient.get('config:simpa-pipelines');
+                if (cached) {
+                    console.log('[ConfigService] ✅ Pipelines SIMPA cargados desde Redis KV');
+                    return cached;
+                }
+            }
+        } catch (error) {
+            console.error('[ConfigService] ⚠️ Error leyendo KV Pipelines SIMPA:', error);
+        }
+
+        console.log('[ConfigService] 📂 Usando pipelines SIMPA locales (fallback)');
+        return readLocalJson(SIMPA_PIPELINES_PATH, SIMPA_PIPELINES_PATH_ALT) || readLocalJson(SIMPA_PIPELINES_PATH_API, SIMPA_PIPELINES_PATH_API) || {};
+    },
+
+    /**
+     * Guarda la configuración de Pipelines de SIMPA en KV
+     */
+    async saveSimpaPipelines(data) {
+        if (!kvClient) {
+            const { url, token } = getKvCredentials();
+            const errorMsg = `KV no configurado. Credenciales encontradas: { url: ${!!url}, token: ${!!token} }`;
+            throw new Error(errorMsg);
+        }
+        await kvClient.set('config:simpa-pipelines', data);
+        console.log('[ConfigService] 💾 Pipelines SIMPA guardados en KV');
         return true;
     }
 };

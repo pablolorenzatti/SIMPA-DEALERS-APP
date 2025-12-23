@@ -1,146 +1,24 @@
 const hubspot = require('@hubspot/api-client');
 const fs = require('fs');
-const path = require('path');
 const https = require('https');
 const querystring = require('querystring');
+const ConfigService = require('./services/config-service');
 
-// Cargar configuración de razones sociales directamente (igual que otros endpoints)
-// Usar exactamente la misma lógica que bulk-models.js que funciona
+// Variables globales para caché en ejecución de serverless (container reuse)
 let razonesSocialesConfig;
-const razonesSocialesPaths = [
-  path.join(__dirname, '../../src/config/razones-sociales.json'),
-  path.join(__dirname, '../src/config/razones-sociales.json'),
-  path.join(__dirname, 'src/config/razones-sociales.json'),
-  path.join(process.cwd(), 'src/config/razones-sociales.json'),
-  '/var/task/src/config/razones-sociales.json',
-  '/var/task/vercel/src/config/razones-sociales.json',
-  '/var/task/api/src/config/razones-sociales.json'
-];
-
-for (const razonesSocialesPath of razonesSocialesPaths) {
-  try {
-    if (fs.existsSync(razonesSocialesPath)) {
-      razonesSocialesConfig = JSON.parse(fs.readFileSync(razonesSocialesPath, 'utf8'));
-      console.log(`[webhook-enrich] ✅ razones-sociales.json cargado desde: ${razonesSocialesPath}`);
-      console.log(`[webhook-enrich] ✅ Total razones sociales cargadas: ${Object.keys(razonesSocialesConfig).length}`);
-      break;
-    }
-  } catch (error) {
-    // Continuar con el siguiente path sin log de error
-  }
-}
-
-if (!razonesSocialesConfig) {
-  try {
-    razonesSocialesConfig = require('../../src/config/razones-sociales.json');
-    console.log('[webhook-enrich] ✅ razones-sociales.json cargado con require');
-    console.log(`[webhook-enrich] ✅ Total razones sociales cargadas: ${Object.keys(razonesSocialesConfig).length}`);
-  } catch (error) {
-    try {
-      razonesSocialesConfig = require('../src/config/razones-sociales.json');
-      console.log('[webhook-enrich] ✅ razones-sociales.json cargado con require relativo');
-      console.log(`[webhook-enrich] ✅ Total razones sociales cargadas: ${Object.keys(razonesSocialesConfig).length}`);
-    } catch (error2) {
-      console.warn('[webhook-enrich] ⚠️ No se pudo cargar razones-sociales.json con require');
-      console.warn('[webhook-enrich] ⚠️ Usando fallback mínimo con TEST ACCOUNT');
-      // Fallback mínimo con TEST ACCOUNT para que funcione mientras se resuelve el despliegue
-      razonesSocialesConfig = {
-        "TEST ACCOUNT": {
-          "portalId": "50104303",
-          "tokenEnv": "TEST_ACCOUNT_KEY",
-          "brands": [],
-          "dealers": []
-        }
-      };
-      console.log(`[webhook-enrich] ⚠️ Fallback activado con ${Object.keys(razonesSocialesConfig).length} razón social`);
-    }
-  }
-}
-
-// Cargar configuración de pipelines de SIMPA
 let simpaPipelinesConfig;
-const simpaPipelinesPaths = [
-  path.join(__dirname, '../../src/config/simpa-pipelines.json'),
-  path.join(__dirname, '../src/config/simpa-pipelines.json'),
-  path.join(__dirname, 'src/config/simpa-pipelines.json'),
-  path.join(process.cwd(), 'src/config/simpa-pipelines.json'),
-  '/var/task/src/config/simpa-pipelines.json',
-  '/var/task/vercel/src/config/simpa-pipelines.json',
-  '/var/task/api/src/config/simpa-pipelines.json'
-];
 
-for (const simpaPipelinesPath of simpaPipelinesPaths) {
-  try {
-    if (fs.existsSync(simpaPipelinesPath)) {
-      simpaPipelinesConfig = JSON.parse(fs.readFileSync(simpaPipelinesPath, 'utf8'));
-      console.log(`[webhook-enrich] ✅ simpa-pipelines.json cargado desde: ${simpaPipelinesPath}`);
-      console.log(`[webhook-enrich] ✅ Total marcas configuradas: ${Object.keys(simpaPipelinesConfig).length}`);
-      break;
-    }
-  } catch (error) {
-    // Continuar con el siguiente path sin log de error
+async function loadConfigs() {
+  if (!razonesSocialesConfig) {
+    razonesSocialesConfig = await ConfigService.getRazonesSociales();
+    console.log(`[webhook-enrich] ✅ Configuración de Razones Sociales cargada (${Object.keys(razonesSocialesConfig).length} items)`);
+  } else {
+    console.log(`[webhook-enrich] ♻️ Reusando configuración en memoria`);
   }
-}
 
-if (!simpaPipelinesConfig) {
-  try {
-    simpaPipelinesConfig = require('../../src/config/simpa-pipelines.json');
-    console.log('[webhook-enrich] ✅ simpa-pipelines.json cargado con require');
-    console.log(`[webhook-enrich] ✅ Total marcas configuradas: ${Object.keys(simpaPipelinesConfig).length}`);
-  } catch (error) {
-    try {
-      simpaPipelinesConfig = require('../src/config/simpa-pipelines.json');
-      console.log('[webhook-enrich] ✅ simpa-pipelines.json cargado con require relativo');
-      console.log(`[webhook-enrich] ✅ Total marcas configuradas: ${Object.keys(simpaPipelinesConfig).length}`);
-    } catch (error2) {
-      console.warn('[webhook-enrich] ⚠️ No se pudo cargar simpa-pipelines.json con require');
-      console.warn('[webhook-enrich] ⚠️ Usando fallback mínimo con GASGAS');
-      // Fallback mínimo con GASGAS para que funcione mientras se resuelve el despliegue
-      simpaPipelinesConfig = {
-        "GASGAS": {
-          "pipelineId": "61078965",
-          "pipelineLabel": "GASGAS Pipeline",
-          "stages": [
-            {
-              "stageId": "119903131",
-              "stageLabel": "Etapa 1",
-              "probability": 0.1
-            },
-            {
-              "stageId": "119903132",
-              "stageLabel": "Etapa 2",
-              "probability": 0.3
-            },
-            {
-              "stageId": "119903133",
-              "stageLabel": "Etapa 3",
-              "probability": 0.5
-            },
-            {
-              "stageId": "119903134",
-              "stageLabel": "Etapa 4",
-              "probability": 0.5
-            },
-            {
-              "stageId": "119903135",
-              "stageLabel": "Etapa 5",
-              "probability": 1.0
-            },
-            {
-              "stageId": "119903136",
-              "stageLabel": "Etapa 6",
-              "probability": 0.0
-            },
-            {
-              "stageId": "119903137",
-              "stageLabel": "Etapa 7",
-              "probability": 1.0
-            }
-          ]
-        }
-      };
-      console.log(`[webhook-enrich] ⚠️ Fallback activado con ${Object.keys(simpaPipelinesConfig).length} marca`);
-    }
+  if (!simpaPipelinesConfig) {
+    simpaPipelinesConfig = await ConfigService.getSimpaPipelines();
+    console.log(`[webhook-enrich] ✅ Configuración de Pipelines SIMPA cargada (${Object.keys(simpaPipelinesConfig).length} items)`);
   }
 }
 
@@ -753,9 +631,13 @@ module.exports = async (req, res) => {
     return res.status(200).json({
       status: 'ok',
       message: 'Webhook enrich endpoint is running',
+      message: 'Webhook enrich endpoint is running',
       timestamp: new Date().toISOString()
     });
   }
+
+  // Pre-cargar configuraciones
+  await loadConfigs();
 
   if (req.method !== 'POST') {
     return res.status(405).json({ status: 'error', message: 'Method Not Allowed' });
