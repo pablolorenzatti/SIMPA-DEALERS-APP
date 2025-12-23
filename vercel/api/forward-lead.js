@@ -1,14 +1,15 @@
 const hubspot = require('@hubspot/api-client');
 const { sendSlackErrorNotification } = require('./utils/slack-notifier');
 const ConfigService = require('./services/config-service');
+const LeadProcessor = require('./services/lead-processor');
 
-// Funciones utilitarias
+// Funciones utilitarias (Delegadas a LeadProcessor donde sea posible, mantenemos locales si son ui-specific)
 function sanitize(value) {
   return typeof value === 'string' ? value.trim() : value;
 }
 
 function normalizeKey(value) {
-  return typeof value === 'string' ? value.toLowerCase().replace(/[^a-z0-9]/g, '') : '';
+  return LeadProcessor.normalizeKey(value);
 }
 
 function sanitizeName(value) {
@@ -125,63 +126,28 @@ module.exports = async (req, res) => {
       throw new Error('El campo "dealer_name" es obligatorio');
     }
 
-    // Resolver Razón Social
+    // Resolver Razón Social usando LeadProcessor
     let razonSocial = razonSocialInput;
 
     if (!razonSocial) {
-      console.log(`[forward-lead] Razón social no proporcionada. Intentando inferir desde dealer "${dealerNameInput}" y marca "${marca}"...`);
-
-      if (!marca) {
-        throw new Error('El campo "contact_brand" es obligatorio cuando no se proporciona "razon_social"');
-      }
+      console.log(`[forward-lead] Razón social no proporcionada. Intentando inferir desde dealer "${dealerNameInput}" y marca "${marca || '(no proporcionada)'}"...`);
 
       if (!razonesSocialesConfig) {
         throw new Error('No se pudo cargar la configuración de razones sociales para inferir la entidad legal');
       }
 
-      const dealerNormalized = normalizeKey(dealerNameInput);
-      const brandNormalized = normalizeKey(marca);
+      // Usar servicio centralizado para inferencia
+      const inferenceMsg = LeadProcessor.inferRazonSocial(razonesSocialesConfig, dealerNameInput, marca);
 
-      // Buscar coincidencia en la configuración
-      const matchedRazon = Object.keys(razonesSocialesConfig).find(key => {
-        const config = razonesSocialesConfig[key];
-
-        // Verificar si el dealer está en la lista de dealers de esta razón social
-        const hasDealer = config.dealers && config.dealers.some(d => normalizeKey(d) === dealerNormalized);
-
-        // Verificar si la marca está en la lista de marcas de esta razón social
-        const hasBrand = config.brands && config.brands.some(b => normalizeKey(b) === brandNormalized);
-
-        return hasDealer && hasBrand;
-      });
-
-      if (matchedRazon) {
-        razonSocial = matchedRazon;
-        console.log(`[forward-lead] ✅ Razón social inferida: "${razonSocial}"`);
+      if (inferenceMsg.razonSocial) {
+        razonSocial = inferenceMsg.razonSocial;
+        console.log(`[forward-lead] ✅ Razón social inferida: "${razonSocial}" (Método: ${inferenceMsg.method}, Confianza: ${inferenceMsg.confidence})`);
       } else {
-        // Intento de búsqueda más flexible: solo por dealer (si el dealer es único para una razón social)
-        // Esto es útil si la marca viene con un nombre ligeramente distinto o si el dealer es exclusivo
-        const matchedRazonByDealer = Object.keys(razonesSocialesConfig).find(key => {
-          const config = razonesSocialesConfig[key];
-          return config.dealers && config.dealers.some(d => normalizeKey(d) === dealerNormalized);
-        });
-
-        if (matchedRazonByDealer) {
-          // Verificar si la marca también coincide aunque sea parcialmente o si es la única opción
-          const config = razonesSocialesConfig[matchedRazonByDealer];
-          const hasBrand = config.brands && config.brands.some(b => normalizeKey(b) === brandNormalized);
-
-          if (hasBrand) {
-            razonSocial = matchedRazonByDealer;
-            console.log(`[forward-lead] ✅ Razón social inferida (por dealer y marca): "${razonSocial}"`);
-          } else {
-            console.warn(`[forward-lead] ⚠️ Dealer "${dealerNameInput}" encontrado en "${matchedRazonByDealer}", pero la marca "${marca}" no está explícitamente listada. Usando con precaución.`);
-            razonSocial = matchedRazonByDealer;
-          }
-        } else {
-          console.error(`[forward-lead] ❌ No se pudo inferir la razón social para dealer "${dealerNameInput}" y marca "${marca}"`);
-          throw new Error(`No se pudo determinar la razón social para el dealer "${dealerNameInput}". Verifica que el dealer y la marca estén configurados correctamente en razones-sociales.json.`);
+        console.error(`[forward-lead] ❌ No se pudo inferir la razón social. Detalles: ${inferenceMsg.reason}`);
+        if (inferenceMsg.reason === 'Dealer name missing') {
+          throw new Error('El campo "dealer_name" es obligatorio para inferir la razón social');
         }
+        throw new Error(`No se pudo determinar la razón social para el dealer "${dealerNameInput}". Verifica configuración.`);
       }
     }
 
@@ -196,13 +162,16 @@ module.exports = async (req, res) => {
     let tokenEnv = null;
 
     // Buscar la razón social en el archivo de configuración
-    if (razonesSocialesConfig && razonesSocialesConfig[razonSocial]) {
-      tokenEnv = razonesSocialesConfig[razonSocial].tokenEnv;
-      console.log(`[forward-lead] ✅ Encontrada razón social "${razonSocial}" en configuración con tokenEnv: ${tokenEnv}`);
+    const rsConfig = razonesSocialesConfig[razonSocial];
+
+    // Resolver Token Env usando LeadProcessor
+    const tokenDetermination = LeadProcessor.determineTokenEnv(rsConfig, razonSocial);
+    tokenEnv = tokenDetermination.tokenEnv;
+
+    if (tokenDetermination.source === 'config') {
+      console.log(`[forward-lead] ✅ Token configurado encontrado: ${tokenEnv}`);
     } else {
-      // Fallback: construir el nombre de la variable de entorno si no está en el archivo
-      tokenEnv = `${razonSocial.toUpperCase().replace(/\s+/g, '_')}_TOKEN`;
-      console.warn(`[forward-lead] ⚠️ Razón social "${razonSocial}" no encontrada en configuración, usando fallback: ${tokenEnv}`);
+      console.warn(`[forward-lead] ⚠️ Usando fallback para token: ${tokenEnv}`);
     }
 
     if (tokenEnv) {
@@ -230,8 +199,11 @@ module.exports = async (req, res) => {
     console.log(`[forward-lead] Razón social: ${razonSocialInput}`);
     console.log(`[forward-lead] Iniciando envío de lead al dealer: ${dealerNameInput} (${razonSocialInput})`);
 
-    // Inicializar cliente de HubSpot
-    const hubspotClient = new hubspot.Client({ accessToken });
+    // Inicializar cliente de HubSpot con retries automáticos
+    const hubspotClient = new hubspot.Client({
+      accessToken,
+      numberOfApiCallRetries: 6 // Reintenta automáticamente en caso de error 429 (Rate Limit)
+    });
 
     // Probar conexión obteniendo propiedades
     let contactProperties = [];
@@ -406,121 +378,37 @@ module.exports = async (req, res) => {
         console.log(`[forward-lead] Agregando id_negocio_simpa: ${originDealId}`);
       }
 
-      // LÓGICA DE ASIGNACIÓN DINÁMICA DE PIPELINE
-      // Verificar si hay configuración de pipelineMapping para esta razón social
-      // DEBUG EXTRA: Diagnóstico de por qué falla la asignación
+      // LÓGICA DE ASIGNACIÓN DINÁMICA DE PIPELINE (Refactorizada con LeadProcessor)
+      console.log(`[forward-lead] 🔍 Determinando Pipeline para "${razonSocial}"...`);
 
-      let assignedPipeline = sanitize(inputFields.deal_pipeline);
-      let assignedStage = sanitize(inputFields.deal_stage);
-      let pipelineSource = 'input';
+      const pipelineDetermination = LeadProcessor.determinePipeline(
+        rsConfig,  // Config de la RS (puede ser undefined si no existe en config pero se infirió nombre)
+        marca,
+        inputFields.deal_pipeline,
+        inputFields.deal_stage,
+        dealerNameInput
+      );
 
-      console.log(`[forward-lead] 🔍 DEBUG DIAGNOSTICO:`);
-      console.log(`[forward-lead] razonSocial: "${razonSocial}"`);
-      if (razonesSocialesConfig) {
-        if (razonesSocialesConfig[razonSocial]) {
-          console.log(`[forward-lead] razonesSocialesConfig["${razonSocial}"] existe.`);
-          console.log(`[forward-lead] Keys en config: ${Object.keys(razonesSocialesConfig[razonSocial]).join(', ')}`);
-          if (razonesSocialesConfig[razonSocial].pipelineMapping) {
-            console.log(`[forward-lead] pipelineMapping existe: ${JSON.stringify(razonesSocialesConfig[razonSocial].pipelineMapping)}`);
-          } else {
-            console.log(`[forward-lead] pipelineMapping NO existe en la configuración.`);
-          }
-        } else {
-          console.log(`[forward-lead] razonesSocialesConfig["${razonSocial}"] NO existe.`);
-        }
-      } else {
-        console.log(`[forward-lead] razonesSocialesConfig es null/undefined.`);
-      }
+      const assignedPipeline = pipelineDetermination.pipeline;
+      const assignedStage = pipelineDetermination.stage;
+      const pipelineSource = pipelineDetermination.source;
 
-      if (razonesSocialesConfig && razonesSocialesConfig[razonSocial] && razonesSocialesConfig[razonSocial].pipelineMapping) {
-        const mapping = razonesSocialesConfig[razonSocial].pipelineMapping;
-        console.log(`[forward-lead] 🔍 Verificando pipelineMapping para razón social "${razonSocial}"`);
+      console.log(`[forward-lead] Pipeline asignado: ${assignedPipeline} (Fuente: ${pipelineSource})`);
+      console.log(`[forward-lead] Stage asignado: ${assignedStage}`);
 
-        // Normalizar marca para búsqueda
-        const marcaNormalized = normalizeKey(marca);
+      // Aplicar propiedades personalizadas usando LeadProcessor
+      console.log(`[forward-lead] 🔍 Calculando Propiedades Personalizadas...`);
+      const customPropsCalculated = LeadProcessor.determineCustomProperties(rsConfig, marca);
 
-        // Buscar mapping específico para la marca
-        // Primero intentar coincidencia exacta, luego normalizada
-        let brandMapping = null;
-
-        if (marca) {
-          // Intentar búsqueda directa
-          if (mapping[marca]) {
-            brandMapping = mapping[marca];
-            console.log(`[forward-lead] ✅ Mapping encontrado por coincidencia exacta de marca: "${marca}"`);
-          } else {
-            // Intentar búsqueda normalizada
-            const mappingKeys = Object.keys(mapping);
-            const matchingKey = mappingKeys.find(key => normalizeKey(key) === marcaNormalized);
-            if (matchingKey) {
-              brandMapping = mapping[matchingKey];
-              console.log(`[forward-lead] ✅ Mapping encontrado por marca normalizada: "${matchingKey}" (input: "${marca}")`);
-            }
-          }
-        }
-
-        if (brandMapping) {
-          if (brandMapping.pipeline) {
-            assignedPipeline = brandMapping.pipeline;
-            pipelineSource = 'mapping_brand';
-          }
-          if (brandMapping.stage) {
-            assignedStage = brandMapping.stage;
-          }
-        } else if (mapping.default) {
-          // Si no hay mapping de marca, usar default si existe
-          console.log(`[forward-lead] ℹ️ No se encontró mapping para marca "${marca}", verificando default`);
-          if (mapping.default.pipeline) {
-            assignedPipeline = mapping.default.pipeline;
-            pipelineSource = 'mapping_default';
-          }
-          if (mapping.default.stage) {
-            assignedStage = mapping.default.stage;
-          }
-        }
-      }
-
-      // Aplicar propiedades personalizadas desde la configuración (si existen)
-      // Aplicar propiedades personalizadas desde la configuración (si existen)
-      if (razonesSocialesConfig && razonesSocialesConfig[razonSocial] && razonesSocialesConfig[razonSocial].customProperties) {
-        const customConfig = razonesSocialesConfig[razonSocial].customProperties;
-        console.log(`[forward-lead] 🔍 Procesando customProperties para "${razonSocial}"`);
-
-        const finalCustomProps = {};
-
-        // 1. Propiedades base (nivel superior, primitivos)
-        for (const [key, value] of Object.entries(customConfig)) {
-          if (typeof value !== 'object' || value === null) {
-            finalCustomProps[key] = value;
-          }
-        }
-
-        // 2. Propiedades default (si existen)
-        if (customConfig.default && typeof customConfig.default === 'object') {
-          Object.assign(finalCustomProps, customConfig.default);
-        }
-
-        // 3. Propiedades específicas de marca (si existen y coinciden)
-        if (marca) {
-          const marcaNormalized = normalizeKey(marca);
-          const brandKey = Object.keys(customConfig).find(k => normalizeKey(k) === marcaNormalized);
-
-          if (brandKey && typeof customConfig[brandKey] === 'object') {
-            console.log(`[forward-lead] ✅ Aplicando override de propiedades para marca "${brandKey}"`);
-            Object.assign(finalCustomProps, customConfig[brandKey]);
-          }
-        }
-
-        console.log(`[forward-lead] 📋 Propiedades personalizadas finales:`, JSON.stringify(finalCustomProps));
-
-        for (const [key, value] of Object.entries(finalCustomProps)) {
+      if (Object.keys(customPropsCalculated).length > 0) {
+        console.log(`[forward-lead] 📋 Propiedades personalizadas calculadas:`, JSON.stringify(customPropsCalculated));
+        for (const [key, value] of Object.entries(customPropsCalculated)) {
           dealProperties[key] = value;
           console.log(`[forward-lead] ✅ Agregando propiedad personalizada: ${key} = ${value}`);
         }
       }
 
-      console.log(`[forward-lead] Pipeline asignado: ${assignedPipeline} (Fuente: ${pipelineSource})`);
-      console.log(`[forward-lead] Stage asignado: ${assignedStage}`);
+
 
       // Agregar dealstage y pipeline solo si están definidos
       if (assignedStage) {
@@ -913,6 +801,22 @@ module.exports = async (req, res) => {
       } catch (slackError) {
         console.error('[forward-lead] Error enviando notificación a Slack (ignorado para no afectar respuesta):', slackError);
       }
+    }
+
+    // Manejo específico para Rate Limit (429)
+    if (error.code === 429 || error.statusCode === 429 || error.message.includes('429') || (error.body && JSON.stringify(error.body).includes('RATE_LIMIT'))) {
+      const rateLimitMsg = "Se alcanzó el límite de velocidad de la API de HubSpot (Rate Limit). La acción se reintentará automáticamente.";
+      console.warn(`[forward-lead] ⚠️ ${rateLimitMsg}`);
+
+      // Devolver 429 explícitamente le indica a HubSpot (y otros clientes) que deben reintentar
+      return res.status(429).json({
+        outputFields: {
+          success: false,
+          message: rateLimitMsg,
+          error: "RATE_LIMIT",
+          errorDetails: errorDetails || null
+        }
+      });
     }
 
     res.status(500).json({

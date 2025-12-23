@@ -123,6 +123,10 @@
       "QJ Motor": {
         "pipeline": "default",
         "stage": "751513795"
+      },
+      "default": {
+        "pipeline": "default",
+        "stage": "751513795"
       }
     }
   },

@@ -20,7 +20,7 @@ module.exports = (req, res) => {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SIMPA Admin Dashboard 2.1</title>
+    <title>SIMPA Admin Dashboard 2.2 (S)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
     <!-- Phosphor Icons -->
@@ -89,6 +89,10 @@ module.exports = (req, res) => {
                         :class="['w-full text-left px-4 py-3 rounded-xl transition-all flex items-center gap-3 font-medium', currentView === 'modelos' ? 'bg-blue-50 text-blue-700 shadow-sm ring-1 ring-blue-100' : 'text-slate-600 hover:bg-slate-50']">
                         <i class="ph ph-motorcycle text-lg"></i> Catalogo Modelos
                     </button>
+                    <button @click="currentView = 'simulator'"
+                        :class="['w-full text-left px-4 py-3 rounded-xl transition-all flex items-center gap-3 font-medium', currentView === 'simulator' ? 'bg-green-50 text-green-700 shadow-sm ring-1 ring-green-100' : 'text-slate-600 hover:bg-slate-50']">
+                        <i class="ph ph-play-circle text-lg"></i> Simulador
+                    </button>
                     <button @click="currentView = 'raw'"
                         :class="['w-full text-left px-4 py-3 rounded-xl transition-all flex items-center gap-3 font-medium', currentView === 'raw' ? 'bg-purple-50 text-purple-700 shadow-sm ring-1 ring-purple-100' : 'text-slate-600 hover:bg-slate-50']">
                         <i class="ph ph-code text-lg"></i> JSON Crudo
@@ -99,8 +103,9 @@ module.exports = (req, res) => {
                    <button @click="resetConfigFromLocal" class="w-full text-xs flex items-center justify-center gap-2 text-slate-400 hover:text-red-500 hover:bg-red-50 py-2 rounded transition-colors group" title="Peligro: Sobrescribe la base de datos con el archivo local">
                         <i class="ph ph-arrow-counter-clockwise"></i> Restaurar desde Código
                    </button>
+
                    <div class="text-xs text-slate-400 text-center">
-                       v2.1.0 &bull; Powered by Vercel KV
+                       v2.2.0 (Sim) &bull; Feature Branch
                    </div>
                 </div>
             </nav>
@@ -356,6 +361,135 @@ module.exports = (req, res) => {
                     </div>
                 </div>
 
+                <!-- VIEW: SIMULATOR -->
+                <div v-else-if="currentView === 'simulator'" class="flex-1 flex flex-col p-8 overflow-y-auto bg-slate-50">
+                    <div class="max-w-4xl mx-auto w-full">
+                        <h2 class="text-2xl font-bold text-slate-800 mb-6 flex items-center gap-2">
+                            <i class="ph ph-flask text-green-600"></i> Simulador de Inferencia
+                        </h2>
+                        
+                        <!-- Inputs -->
+                        <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 mb-6">
+                            <div class="grid grid-cols-2 gap-6">
+                                <div class="col-span-1">
+                                    <label class="block text-sm font-medium text-slate-700 mb-1">Nombre Dealer (Input)</label>
+                                    <input v-model="simDealer" placeholder="Ej: QJ MOTOR VILLA LURO" class="w-full px-4 py-2 rounded-lg border border-slate-300 focus:ring-2 focus:ring-green-500 focus:outline-none">
+                                </div>
+                                <div class="col-span-1">
+                                    <label class="block text-sm font-medium text-slate-700 mb-1">Marca (Optional)</label>
+                                    <input v-model="simBrand" placeholder="Ej: QJ Motor" class="w-full px-4 py-2 rounded-lg border border-slate-300 focus:ring-2 focus:ring-green-500 focus:outline-none">
+                                </div>
+                            </div>
+                            <div class="flex justify-end mt-4">
+                                <button @click="runSimulation" :disabled="simulating || !simDealer" 
+                                    class="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg font-medium shadow-sm flex items-center gap-2 disabled:opacity-50">
+                                    <i v-if="simulating" class="ph ph-spinner animate-spin"></i>
+                                    <i v-else class="ph ph-play"></i>
+                                    Ejecutar Simulación
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Results -->
+                        <div v-if="simResult" class="space-y-6 animate-fade-in">
+                            
+                            <!-- Status Card -->
+                            <div :class="['p-4 rounded-xl border flex items-start gap-4', simResult.configFound ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200']">
+                                <div :class="['p-2 rounded-full shrink-0', simResult.configFound ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600']">
+                                    <i class="ph text-2xl" :class="simResult.configFound ? 'ph-check-circle' : 'ph-warning-circle'"></i>
+                                </div>
+                                <div class="flex-1">
+                                    <h3 class="font-bold text-lg" :class="simResult.configFound ? 'text-green-800' : 'text-red-800'">
+                                        {{ simResult.configFound ? 'Configuración Encontrada' : 'No se encontró configuración' }}
+                                    </h3>
+                                    <p class="text-sm mt-1 opacity-80" v-if="simResult.inference">
+                                        Razón Social: <strong>{{ simResult.inference.razonSocial || 'N/A' }}</strong><br>
+                                        Método: {{ simResult.inference.method }} (Confianza: {{ simResult.inference.confidence }})
+                                        <span v-if="simResult.inference.reason" class="block text-red-600 mt-1">Razón Fallo: {{ simResult.inference.reason }}</span>
+                                    </p>
+                                </div>
+                            </div>
+
+                            </div>
+
+                            <!-- Validation Results -->
+                            <div v-if="simResult.configFound && simResult.validation" class="animate-fade-in">
+                                <div v-if="simResult.validation.warnings.length > 0" class="mb-4 bg-amber-50 border border-amber-200 rounded-xl p-4">
+                                    <h4 class="font-bold text-amber-800 text-sm mb-2 flex items-center gap-2">
+                                        <i class="ph ph-warning"></i> Advertencias de Validación
+                                    </h4>
+                                    <ul class="list-disc list-inside text-sm text-amber-700 space-y-1">
+                                        <li v-for="(warn, idx) in simResult.validation.warnings" :key="idx">{{ warn }}</li>
+                                    </ul>
+                                </div>
+                                <div v-if="!simResult.validation.isValid" class="bg-red-50 border border-red-200 rounded-xl p-4">
+                                    <h4 class="font-bold text-red-800 text-sm mb-2 flex items-center gap-2">
+                                        <i class="ph ph-x-circle"></i> Errores Críticos (Esto fallaría en producción)
+                                    </h4>
+                                    <ul class="list-disc list-inside text-sm text-red-700 space-y-1">
+                                        <li v-for="(err, idx) in simResult.validation.errors" :key="idx">{{ err }}</li>
+                                    </ul>
+                                </div>
+                                <div v-else-if="simResult.validation.isValid && simResult.validation.warnings.length === 0" class="bg-green-50 border border-green-200 rounded-xl p-4 flex items-center gap-2 text-green-700 text-sm font-medium">
+                                    <i class="ph ph-check-circle"></i> Validación de datos correcta.
+                                </div>
+                            </div>
+
+                            <!-- Details Grid -->
+                            <div v-if="simResult.configFound && simResult.details" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <!-- Pipeline Info -->
+                                <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
+                                    <h4 class="font-bold text-slate-700 mb-3 flex items-center gap-2"><i class="ph ph-git-merge"></i> Pipeline Target</h4>
+                                    <div class="space-y-2 text-sm">
+                                        <div class="flex justify-between border-b pb-2">
+                                            <span class="text-slate-500">Pipeline ID</span>
+                                            <span class="font-mono bg-slate-100 px-2 rounded">{{ simResult.details.pipeline.pipeline }}</span>
+                                        </div>
+                                        <div class="flex justify-between border-b pb-2">
+                                            <span class="text-slate-500">Stage ID</span>
+                                            <span class="font-mono bg-slate-100 px-2 rounded">{{ simResult.details.pipeline.stage }}</span>
+                                        </div>
+                                        <div class="flex justify-between">
+                                            <span class="text-slate-500">Origen Lógica</span>
+                                            <span class="text-blue-600 font-medium">{{ simResult.details.pipeline.source }}</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Token Info -->
+                                <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
+                                    <h4 class="font-bold text-slate-700 mb-3 flex items-center gap-2"><i class="ph ph-key"></i> Autenticación</h4>
+                                    <div class="space-y-2 text-sm">
+                                        <div class="flex justify-between border-b pb-2">
+                                            <span class="text-slate-500">Variable Env</span>
+                                            <span class="font-mono bg-slate-100 px-2 rounded">{{ simResult.details.token.tokenEnv }}</span>
+                                        </div>
+                                        <div class="flex justify-between">
+                                            <span class="text-slate-500">Fuente</span>
+                                            <span class="text-slate-700">{{ simResult.details.token.source }}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Custom Properties -->
+                            <div v-if="simResult.configFound && simResult.details && simResult.details.customProperties" class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
+                                <h4 class="font-bold text-slate-700 mb-3 flex items-center gap-2"><i class="ph ph-sliders"></i> Propiedades Calculadas</h4>
+                                <div v-if="Object.keys(simResult.details.customProperties).length === 0" class="text-sm text-slate-400 italic">
+                                    No hay propiedades personalizadas configuradas.
+                                </div>
+                                <div v-else class="grid grid-cols-2 gap-2">
+                                    <div v-for="(val, key) in simResult.details.customProperties" :key="key" class="p-2 bg-slate-50 rounded border flex flex-col">
+                                        <span class="text-xs text-slate-500 uppercase tracking-wide">{{ key }}</span>
+                                        <span class="font-mono text-sm text-blue-700 font-medium">{{ val }}</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+
                 <!-- VIEW: RAW JSON -->
                 <div v-else-if="currentView === 'raw'" class="flex-1 p-8 bg-slate-900 text-slate-300 font-mono text-sm overflow-auto">
                     <h3 class="text-white font-bold mb-4">Debug RAW Data</h3>
@@ -432,8 +566,9 @@ module.exports = (req, res) => {
                 const loading = ref(true);
                 const saving = ref(false);
                 const isSyncing = ref(false);
+                const simulating = ref(false);
                 const unsavedChanges = ref(false);
-                const currentView = ref('razones'); // razones, modelos, raw
+                const currentView = ref('simulator'); // Default to simulator for this version
                 
                 // Data
                 const razonesSociales = ref({});
@@ -460,6 +595,11 @@ module.exports = (req, res) => {
                 const showSyncModelModal = ref(false);
                 const modelToSync = ref('');
                 const selectedRazonesForSync = ref([]);
+
+                // Simulator State
+                const simDealer = ref('');
+                const simBrand = ref('');
+                const simResult = ref(null);
 
                 // Computed
                 const sortedRazonKeys = computed(() => Object.keys(razonesSociales.value).sort());
@@ -803,6 +943,29 @@ module.exports = (req, res) => {
                     }
                 };
 
+                const runSimulation = async () => {
+                    if (!simDealer.value) return;
+                    simulating.value = true;
+                    simResult.value = null;
+                    try {
+                        const res = await fetch('/api/admin/simulate', {
+                            method: 'POST',
+                            headers: {'Content-Type': 'application/json'},
+                            body: JSON.stringify({
+                                dealerName: simDealer.value,
+                                brandName: simBrand.value
+                            })
+                        });
+                        const data = await res.json();
+                        simResult.value = data;
+                    } catch(e) {
+                        alert('Error Simulador: ' + e.message);
+                    } finally {
+                        simulating.value = false;
+                    }
+                };
+
+
 
 
                 const resetConfigFromLocal = async () => {
@@ -852,7 +1015,9 @@ module.exports = (req, res) => {
                     showAddBrandModal, newBrandKeyInput, newBrandLabelInput, addNewBrandCatalog,
                     // Sync Models Modal
                     showSyncModelModal, modelToSync, selectedRazonesForSync, applicableRazonesForSync, confirmSyncModel,
-                    resetConfigFromLocal
+                    resetConfigFromLocal,
+                    // Simulator
+                    simDealer, simBrand, simResult, simulating, runSimulation
                 };
             }
         }).mount('#app');

@@ -10,6 +10,9 @@ const RAZONES_SOCIALES_PATH = path.join(process.cwd(), 'src/config/razones-socia
 const MODELS_BY_BRAND_PATH = path.join(process.cwd(), 'src/config/models-by-brand.json');
 const RAZONES_SOCIALES_PATH_ALT = path.join(__dirname, '../../src/config/razones-sociales.json');
 const MODELS_BY_BRAND_PATH_ALT = path.join(__dirname, '../../src/config/models-by-brand.json');
+// Nuevos paths de respaldo para Vercel structure
+const RAZONES_SOCIALES_PATH_API = path.join(__dirname, '../config/razones-sociales.json');
+const MODELS_BY_BRAND_PATH_API = path.join(__dirname, '../config/models-by-brand.json');
 
 // Helper para detectar credenciales y filtrar URLs incorrectas (TCP vs REST)
 function getKvCredentials() {
@@ -98,21 +101,41 @@ const ConfigService = {
      * Obtiene la configuración de Razones Sociales
      */
     async getRazonesSociales() {
+        // Cargar local siempre como base
+        const localConfig = readLocalJson(RAZONES_SOCIALES_PATH, RAZONES_SOCIALES_PATH_ALT) || readLocalJson(RAZONES_SOCIALES_PATH_API, RAZONES_SOCIALES_PATH_API) || {};
+
         try {
             if (kvClient) {
                 const cached = await kvClient.get('config:razones-sociales');
                 if (cached) {
-                    console.log('[ConfigService] ✅ Configuración cargada desde Redis KV');
-                    return cached;
+                    console.log('[ConfigService] ✅ Configuración cargada desde Redis KV (Smart Merge)');
+
+                    // Merge inteligente: Usamos Redis como verdad, pero rellenamos huecos con Local
+                    // Esto arregla el problema donde Redis tiene el objeto pero le falta una propiedad nueva (ej: pipelineMapping)
+                    const merged = { ...localConfig };
+
+                    for (const [key, val] of Object.entries(cached)) {
+                        if (merged[key]) {
+                            // Si existe en ambos, mezclar propiedades (Redis gana en conflictos, Local aporta faltantes)
+                            // Usamos spread para que val (Redis) sobrescriba merged[key] (Local), 
+                            // pero PERO necesitamos que properties faltantes en Redis se mantengan de Local.
+                            // Así que: { ...local, ...redis }
+                            merged[key] = { ...merged[key], ...val };
+                        } else {
+                            // Si solo está en Redis (ej: creado dinámicamente), usar Redis
+                            merged[key] = val;
+                        }
+                    }
+                    return merged;
                 }
             }
         } catch (error) {
             console.error('[ConfigService] ⚠️ Error leyendo KV Razones Sociales:', error);
         }
 
-        // Fallback local
+        // Fallback local puro
         console.log('[ConfigService] 📂 Usando configuración local (fallback)');
-        return readLocalJson(RAZONES_SOCIALES_PATH, RAZONES_SOCIALES_PATH_ALT) || {};
+        return localConfig;
     },
 
     /**
@@ -120,7 +143,7 @@ const ConfigService = {
      */
     async getRazonesSocialesLocal() {
         console.log('[ConfigService] 📂 Forzando lectura desde archivo local');
-        return readLocalJson(RAZONES_SOCIALES_PATH, RAZONES_SOCIALES_PATH_ALT) || {};
+        return readLocalJson(RAZONES_SOCIALES_PATH, RAZONES_SOCIALES_PATH_ALT) || readLocalJson(RAZONES_SOCIALES_PATH_API, RAZONES_SOCIALES_PATH_API) || {};
     },
 
     /**
@@ -167,7 +190,7 @@ const ConfigService = {
      */
     async getModelsByBrandLocal() {
         console.log('[ConfigService] 📂 Forzando lectura de modelos desde archivo local');
-        return readLocalJson(MODELS_BY_BRAND_PATH, MODELS_BY_BRAND_PATH_ALT) || {};
+        return readLocalJson(MODELS_BY_BRAND_PATH, MODELS_BY_BRAND_PATH_ALT) || readLocalJson(MODELS_BY_BRAND_PATH_API, MODELS_BY_BRAND_PATH_API) || {};
     },
 
     /**
