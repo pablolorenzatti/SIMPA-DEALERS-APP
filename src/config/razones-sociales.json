@@ -118,7 +118,13 @@
     "dealers": [
       "QJ MOTOR VILLA LURO",
       "QJ MOTOR CABA VILLA LURO"
-    ]
+    ],
+    "pipelineMapping": {
+      "default": {
+        "pipeline": "default",
+        "stage": "751513795"
+      }
+    }
   },
   "LEMAMOTOR SA": {
     "portalId": null,

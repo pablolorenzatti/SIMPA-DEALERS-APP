@@ -8,7 +8,11 @@
       "KTM",
       "QJ Motor",
       "CF Moto",
-      "Motoplex"
+      "Motoplex",
+      "Vespa",
+      "Aprilia",
+      "Moto Guzzi",
+      "Piaggio"
     ],
     "dealers": [
       "CFMOTO  Rosario",
@@ -18,7 +22,7 @@
       "KTM ROSARIO",
       "MOTO MORINI ROSARIO",
       "MOTOPLEX ROSARIO",
-      "QJ ROSARIO"
+      "QJ MOTOR ROSARIO"
     ]
   },
   "BAMP MOTORCYCLES SA": {
@@ -33,7 +37,13 @@
       "KTM LA PLATA",
       "VESPA STORE LA PLATA",
       "ROYAL ENFIELD LA PLATA"
-    ]
+    ],
+    "pipelineMapping": {
+      "default": {
+        "pipeline": "default",
+        "stage": "54443288"
+      }
+    }
   },
   "I CASA": {
     "portalId": null,
@@ -47,7 +57,7 @@
     "dealers": [
       "KTM CÓRDOBA",
       "MOTOMORINI RÍO CUARTO",
-      "QJ RÍO CUARTO",
+      "QJ MOTOR RÍO CUARTO",
       "ROYAL ENFIELD RÍO CUARTO"
     ]
   },
@@ -56,8 +66,11 @@
     "tokenEnv": "RE_VESPA_MENDOZA_SAS_TOKEN",
     "brands": [
       "Royal Enfield",
+      "Motoplex",
       "Vespa",
-      "Motoplex"
+      "Aprilia",
+      "Moto Guzzi",
+      "Piaggio"
     ],
     "dealers": [
       "MOTOPLEX MENDOZA",
@@ -66,6 +79,10 @@
     ],
     "pipelineMapping": {
       "Royal Enfield": {
+        "pipeline": "701956869",
+        "stage": "1025517729"
+      },
+      "default": {
         "pipeline": "default",
         "stage": "123971"
       }
@@ -78,8 +95,8 @@
       "QJ Motor"
     ],
     "dealers": [
-      "QJ ESCOBAR",
-      "QJ ENTRE RIOS"
+      "QJ MOTOR ESCOBAR",
+      "QJ MOTOR ENTRE RÍOS"
     ]
   },
   "BUENOS RUMBOS SA": {
@@ -89,7 +106,7 @@
       "QJ Motor"
     ],
     "dealers": [
-      "QJ PILAR"
+      "QJ MOTOR PILAR"
     ]
   },
   "CLAUSELL RICARDO ARIEL": {
@@ -99,8 +116,15 @@
       "QJ Motor"
     ],
     "dealers": [
-      "QJ VILLA LURO"
-    ]
+      "QJ MOTOR VILLA LURO",
+      "QJ MOTOR CABA VILLA LURO"
+    ],
+    "pipelineMapping": {
+      "default": {
+        "pipeline": "default",
+        "stage": "751513795"
+      }
+    }
   },
   "LEMAMOTOR SA": {
     "portalId": null,
@@ -110,10 +134,14 @@
       "KTM",
       "Moto Morini",
       "Motoplex",
-      "QJ Motor"
+      "QJ Motor",
+      "Vespa",
+      "Aprilia",
+      "Moto Guzzi",
+      "Piaggio"
     ],
     "dealers": [
-      "QJ SAN ISIDRO",
+      "QJ MOTOR SAN ISIDRO",
       "ROYAL ENFIELD DEVOTO",
       "ROYAL ENFIELD LELOIR",
       "ROYAL ENFIELD VICENTE LÓPEZ",
@@ -131,12 +159,27 @@
       "Royal Enfield": {
         "pipeline": "13726326",
         "stage": "13726327"
+      },
+      "QJ Motor": {
+        "pipeline": "13726326",
+        "stage": "13726327"
+      },
+      "default": {
+        "pipeline": "13726326",
+        "stage": "13726327"
       }
     },
     "customProperties": {
       "Vespa": {
-        "hubspot_owner_id": "68425085"
-      }
+        "hubspot_owner_id": "199509295"
+      },
+      "Royal Enfield": {
+        "hubspot_owner_id": "79389356"
+      },
+      "QJ Motor": {
+        "hubspot_owner_id": "659086131"
+      },
+      "default": {}
     }
   },
   "OLIVERA ROBERTO FEDERICO": {
@@ -146,7 +189,7 @@
       "QJ Motor"
     ],
     "dealers": [
-      "QJ PUERTO MADRYN"
+      "QJ MOTOR PUERTO MADRYN"
     ]
   },
   "PRO ONE SA": {
@@ -156,7 +199,7 @@
       "QJ Motor"
     ],
     "dealers": [
-      "QJ LELOIR"
+      "QJ MOTOR LELOIR"
     ]
   },
   "QJ MENDOZA SAS": {
@@ -166,7 +209,7 @@
       "QJ Motor"
     ],
     "dealers": [
-      "QJ MENDOZA"
+      "QJ MOTOR MENDOZA"
     ]
   },
   "ROYAL MOTORS SA": {
@@ -177,12 +220,18 @@
       "QJ Motor"
     ],
     "dealers": [
-      "QJ SALTA",
-      "QJ TUCUMÁN",
+      "QJ MOTOR SALTA",
+      "QJ MOTOR TUCUMÁN",
       "ROYAL ENFIELD SALTA",
       "ROYAL ENFIELD JUJUY",
       "ROYAL ENFIELD TUCUMÁN"
-    ]
+    ],
+    "pipelineMapping": {
+      "QJ Motor": {
+        "pipeline": "147138845",
+        "stage": "249336714"
+      }
+    }
   },
   "URBAN MOBILITY SRL": {
     "portalId": null,
@@ -191,7 +240,8 @@
       "QJ Motor"
     ],
     "dealers": [
-      "QJ BELGRANO"
+      "QJ MOTOR BELGRANO",
+      "QJ MOTOR CABA BELGRANO"
     ]
   },
   "USADOS DE CALIDAD SRL": {
@@ -201,7 +251,7 @@
       "QJ Motor"
     ],
     "dealers": [
-      "QJ CÓRDOBA"
+      "QJ MOTOR CÓRDOBA"
     ]
   },
   "BUENAS RUTAS": {
@@ -224,7 +274,7 @@
     ],
     "dealers": [
       "ROYAL ENFIELD BELGRANO",
-      "ROYAL ENFIELD NEUQUEN"
+      "ROYAL ENFIELD NEUQUÉN"
     ]
   },
   "ALTO OESTE": {
@@ -243,7 +293,11 @@
     "brands": [
       "Moto Morini",
       "Royal Enfield",
-      "Motoplex"
+      "Motoplex",
+      "Vespa",
+      "Aprilia",
+      "Moto Guzzi",
+      "Piaggio"
     ],
     "dealers": [
       "MOTOMORINI CÓRDOBA",
@@ -252,8 +306,8 @@
     ],
     "pipelineMapping": {
       "default": {
-        "pipeline": "default",
-        "stage": "appointmentscheduled"
+        "pipeline": "646544147",
+        "stage": "952130885"
       },
       "Moto Morini": {
         "pipeline": "646544147",
@@ -335,7 +389,11 @@
     "portalId": null,
     "tokenEnv": "C_Y_G_S_A_S_TOKEN",
     "brands": [
-      "Motoplex"
+      "Motoplex",
+      "Vespa",
+      "Aprilia",
+      "Moto Guzzi",
+      "Piaggio"
     ],
     "dealers": [
       "MOTOPLEX CHACO"
@@ -355,7 +413,11 @@
     "portalId": null,
     "tokenEnv": "DON_DANIEL_S_R_L_TOKEN",
     "brands": [
-      "Motoplex"
+      "Motoplex",
+      "Vespa",
+      "Aprilia",
+      "Moto Guzzi",
+      "Piaggio"
     ],
     "dealers": [
       "MOTOPLEX TUCUMÁN"
@@ -408,19 +470,27 @@
     "brands": [
       "Moto Morini",
       "Motoplex",
-      "QJ Motor"
+      "QJ Motor",
+      "Vespa",
+      "Aprilia",
+      "Moto Guzzi",
+      "Piaggio"
     ],
     "dealers": [
       "MOTO MORINI QUILMES",
       "MOTOPLEX QUILMES",
-      "QJ QUILMES"
+      "QJ MOTOR QUILMES"
     ]
   },
   "HJ MOTOS S A": {
     "portalId": null,
     "tokenEnv": "HJ_MOTOS_S_A_TOKEN",
     "brands": [
-      "Motoplex"
+      "Motoplex",
+      "Vespa",
+      "Aprilia",
+      "Moto Guzzi",
+      "Piaggio"
     ],
     "dealers": [
       "MOTOPLEX PUERTO MADERO"
@@ -433,7 +503,7 @@
       "QJ Motor"
     ],
     "dealers": [
-      "QJ CATAMARCA"
+      "QJ MOTOR CATAMARCA"
     ]
   },
   "KAL SRL": {
@@ -442,7 +512,11 @@
     "brands": [
       "KTM",
       "Moto Morini",
-      "Motoplex"
+      "Motoplex",
+      "Vespa",
+      "Aprilia",
+      "Moto Guzzi",
+      "Piaggio"
     ],
     "dealers": [
       "KTM SALTA",
@@ -472,7 +546,7 @@
     "dealers": [
       "KTM VILLA MARÍA",
       "KTM CÓRDOBA VILLA MARÍA",
-      "QJ VILLA MARÍA"
+      "QJ MOTOR VILLA MARÍA"
     ]
   },
   "MK MOTOR CYKEL SRL": {
@@ -540,7 +614,11 @@
     "portalId": null,
     "tokenEnv": "PALERMO_BIKES_SRL_TOKEN",
     "brands": [
-      "Motoplex"
+      "Motoplex",
+      "Vespa",
+      "Aprilia",
+      "Moto Guzzi",
+      "Piaggio"
     ],
     "dealers": [
       "MOTOPLEX PALERMO"
@@ -574,7 +652,7 @@
       "Royal Enfield"
     ],
     "dealers": [
-      "ROYAL ENFIELD BAHIA BLANCA"
+      "ROYAL ENFIELD BAHÍA BLANCA"
     ]
   },
   "SBK": {
