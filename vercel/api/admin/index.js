@@ -803,7 +803,7 @@ module.exports = (req, res) => {
                     }
                 };
 
-                };
+
 
                 const resetConfigFromLocal = async () => {
                     if(!confirm('ADVERTENCIA: Esto sobrescribirá TODA la configuración actual en la base de datos (Redis) con los archivos json desplegados (hardcodeados). Se perderán los cambios manuales no guardados en código. ¿Continuar?')) return;

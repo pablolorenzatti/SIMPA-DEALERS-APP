@@ -88,5 +88,45 @@
       "SRV 600",
       "SRT 550 SX"
     ]
+  },
+  "VESPA": {
+    "label": "Vespa",
+    "models": [
+      "VXL 150",
+      "GTS 300 Super",
+      "GTS 300 Super Sport",
+      "GTS 300 Super Tech",
+      "Dual Edición Limitada"
+    ]
+  },
+  "APRILIA": {
+    "label": "Aprilia",
+    "models": [
+      "SR 160",
+      "SXR 160",
+      "RS 660",
+      "Tuareg 660"
+    ]
+  },
+  "MOTO GUZZI": {
+    "label": "Moto Guzzi",
+    "models": [
+      "V7 Stone",
+      "V7 Special",
+      "V85TT",
+      "Stelvio",
+      "Stone Corsa"
+    ]
+  },
+  "PIAGGIO": {
+    "label": "Piaggio",
+    "models": [
+      "Beverly 400",
+      "MP3 310"
+    ]
+  },
+  "MOTOPLEX": {
+    "label": "Motoplex",
+    "models": []
   }
 }
