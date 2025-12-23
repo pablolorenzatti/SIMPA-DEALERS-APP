@@ -116,6 +116,14 @@ const ConfigService = {
     },
 
     /**
+     * Obtiene la configuración de Razones Sociales DIRECTAMENTE del archivo local (bypassing KV)
+     */
+    async getRazonesSocialesLocal() {
+        console.log('[ConfigService] 📂 Forzando lectura desde archivo local');
+        return readLocalJson(RAZONES_SOCIALES_PATH, RAZONES_SOCIALES_PATH_ALT) || {};
+    },
+
+    /**
      * Guarda la configuración de Razones Sociales en KV
      */
     async saveRazonesSociales(data) {
@@ -151,6 +159,14 @@ const ConfigService = {
         }
 
         console.log('[ConfigService] 📂 Usando modelos locales (fallback)');
+        return readLocalJson(MODELS_BY_BRAND_PATH, MODELS_BY_BRAND_PATH_ALT) || {};
+    },
+
+    /**
+     * Obtiene la configuración de Modelos DIRECTAMENTE del archivo local (bypassing KV)
+     */
+    async getModelsByBrandLocal() {
+        console.log('[ConfigService] 📂 Forzando lectura de modelos desde archivo local');
         return readLocalJson(MODELS_BY_BRAND_PATH, MODELS_BY_BRAND_PATH_ALT) || {};
     },
 

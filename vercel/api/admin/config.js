@@ -70,6 +70,30 @@ module.exports = async (req, res) => {
                 return res.status(200).json({ success: true, results });
             }
 
+            // Acción Especial: Restaurar desde Local
+            if (body.action === 'reset_from_local') {
+                try {
+                    console.log('[AdminAPI] Iniciando restauración desde archivos locales...');
+                    const localRazones = await ConfigService.getRazonesSocialesLocal();
+                    const localModels = await ConfigService.getModelsByBrandLocal();
+
+                    await ConfigService.saveRazonesSociales(localRazones);
+                    await ConfigService.saveModelsByBrand(localModels);
+
+                    return res.status(200).json({
+                        success: true,
+                        message: 'Configuración restaurada desde archivos locales (Deployment) a Vercel KV',
+                        details: {
+                            razonesCount: Object.keys(localRazones).length,
+                            modelsCount: Object.keys(localModels).length
+                        }
+                    });
+                } catch (e) {
+                    console.error('[AdminAPI] Error restoring from local:', e);
+                    return res.status(500).json({ error: 'Failed to restore from local: ' + e.message });
+                }
+            }
+
             // Legacy/Fallback format: { type: '...', data: ... }
             const { type, data } = body;
             if (type && data) {

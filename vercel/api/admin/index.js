@@ -95,7 +95,10 @@ module.exports = (req, res) => {
                     </button>
                 </div>
                 
-                <div class="mt-auto p-4 border-t border-slate-100">
+                <div class="mt-auto p-4 border-t border-slate-100 space-y-3">
+                   <button @click="resetConfigFromLocal" class="w-full text-xs flex items-center justify-center gap-2 text-slate-400 hover:text-red-500 hover:bg-red-50 py-2 rounded transition-colors group" title="Peligro: Sobrescribe la base de datos con el archivo local">
+                        <i class="ph ph-arrow-counter-clockwise"></i> Restaurar desde Código
+                   </button>
                    <div class="text-xs text-slate-400 text-center">
                        v2.1.0 &bull; Powered by Vercel KV
                    </div>
@@ -800,6 +803,30 @@ module.exports = (req, res) => {
                     }
                 };
 
+                };
+
+                const resetConfigFromLocal = async () => {
+                    if(!confirm('ADVERTENCIA: Esto sobrescribirá TODA la configuración actual en la base de datos (Redis) con los archivos json desplegados (hardcodeados). Se perderán los cambios manuales no guardados en código. ¿Continuar?')) return;
+                    
+                    try {
+                        loading.value = true;
+                        const res = await fetch('/api/admin/config', {
+                             method: 'POST',
+                             headers: {'Content-Type': 'application/json'},
+                             body: JSON.stringify({ action: 'reset_from_local' })
+                        });
+                        const data = await res.json();
+                        
+                        if(!res.ok) throw new Error(data.error || 'Falló restauración');
+                        
+                        alert('Restauración completada: ' + (data.message || 'Ok'));
+                        window.location.reload();
+                    } catch(e) {
+                        alert('Error: ' + e.message);
+                        loading.value = false;
+                    }
+                };
+
                 // Watch for unsaved changes warning before leaving
                 watch([razonesSociales, modelsByBrand], () => {
                     // Deep watch would be needed for full reactivity
@@ -824,7 +851,8 @@ module.exports = (req, res) => {
                     newModelInput, addModel, removeModel,
                     showAddBrandModal, newBrandKeyInput, newBrandLabelInput, addNewBrandCatalog,
                     // Sync Models Modal
-                    showSyncModelModal, modelToSync, selectedRazonesForSync, applicableRazonesForSync, confirmSyncModel
+                    showSyncModelModal, modelToSync, selectedRazonesForSync, applicableRazonesForSync, confirmSyncModel,
+                    resetConfigFromLocal
                 };
             }
         }).mount('#app');
