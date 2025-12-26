@@ -45,8 +45,18 @@ module.exports = (req, res) => {
             }
         }
     </script>
+    <script>
+        window.onerror = function(msg, url, line) {
+            // Ignorar errores de ResizeObserver que son benignos
+            if(msg.includes('ResizeObserver')) return;
+            console.error('Global Error:', msg, line);
+            // Solo alertar si es crítico para la inicialización
+            if(msg.includes('App') || msg.includes('petite-vue')) alert('Error crítico: ' + msg);
+        };
+    </script>
     <style>
-        [v-cloak] { opacity: 0; }
+        [v-cloak] { display: none !important; }
+        .hidden-force { display: none !important; }
         body { background-color: #F5F5F7; }
         .sidebar-link.active { background-color: white; color: black; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
         .glass { background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(12px); border-bottom: 1px solid rgba(0,0,0,0.05); }
@@ -100,13 +110,24 @@ module.exports = (req, res) => {
                 
                 <!-- DASHBOARD -->
                 <div v-if="currentView === 'dashboard'" class="max-w-7xl mx-auto space-y-8">
-                    <div class="flex justify-end mb-2">
-                        <select v-model="selectedPeriod" @change="fetchDashboardStats" class="bg-white border-none rounded-xl shadow-sm text-sm font-medium py-2 px-4 focus:ring-0 cursor-pointer">
-                            <option value="today">Hoy</option>
-                            <option value="yesterday">Ayer</option>
-                            <option value="7d">Últimos 7 días</option>
-                            <option value="30d">Últimos 30 días</option>
-                        </select>
+                    <!-- Removed top-right period selector -->
+
+                    <!-- Dashboard Header with Controls -->
+                    <div class="flex flex-col md:flex-row justify-between items-start md:items-end gap-4 mb-2">
+                         <div>
+                             <h2 class="text-2xl font-bold text-black tracking-tight">Resumen General</h2>
+                             <p class="text-sm text-gray-500">Métricas de procesamiento de leads.</p>
+                         </div>
+                         <div class="bg-white p-2 rounded-xl shadow-sm border border-gray-100 flex items-center gap-3">
+                             <label class="flex items-center gap-2 cursor-pointer px-2 py-1 hover:bg-gray-50 rounded-lg transition-colors">
+                                <input type="checkbox" v-model="includeHistory" @change="fetchDashboardStats" class="rounded border-gray-300 text-black shadow-sm focus:ring-0">
+                                <span class="text-xs text-gray-600 font-medium">Historial Completo</span>
+                            </label>
+                            <div class="w-px h-4 bg-gray-200"></div>
+                            <button @click="resetHistory" class="text-gray-400 hover:text-red-500 hover:bg-red-50 p-1.5 rounded-lg transition-colors" title="Limpiar logs y estadísticas">
+                                <i class="ph ph-trash text-lg"></i>
+                            </button>
+                         </div>
                     </div>
 
                     <!-- KPI Cards -->
@@ -133,10 +154,17 @@ module.exports = (req, res) => {
                         </div>
                     </div>
                     
-                    <!-- Top Errors Analysis -->
-                    <div v-if="topErrors.length > 0" class="bg-white rounded-3xl shadow-soft border border-gray-100 p-6">
-                        <h3 class="font-semibold text-black mb-4">Análisis de Errores (Top 5)</h3>
-                        <div class="space-y-3">
+                    <!-- Collapsible Top Errors Analysis -->
+                    <div v-if="topErrors.length > 0" class="bg-white rounded-3xl shadow-soft border border-gray-100 overflow-hidden transition-all duration-300">
+                        <div class="p-6 flex justify-between items-center bg-gray-50/50">
+                             <div @click="showErrors = !showErrors" class="flex-1 cursor-pointer flex items-center gap-2">
+                                 <h3 class="font-semibold text-black flex items-center gap-2">
+                                     <i class="ph ph-warning-circle text-red-500"></i> Análisis de Errores (Top 5)
+                                </h3>
+                                <i :class="['ph text-lg text-gray-400 transition-transform duration-300', showErrors ? 'ph-caret-up' : 'ph-caret-down']"></i>
+                            </div>
+                        </div>
+                        <div v-show="showErrors" class="px-6 pb-6 space-y-3">
                             <div v-for="err in topErrors" class="flex items-center justify-between text-sm p-3 bg-red-50/50 rounded-xl border border-red-50">
                                 <span class="text-red-700 truncate flex-1 pr-4 font-medium">{{ err.msg }}</span>
                                 <span class="bg-red-100 text-red-800 px-2 py-1 rounded-lg text-xs font-bold">{{ err.count }} eventos</span>
@@ -152,27 +180,42 @@ module.exports = (req, res) => {
                                 <h3 class="font-semibold text-black">Log de Actividad</h3>
                                 <button @click="fetchDashboardStats" class="text-sm text-apple-action font-medium hover:underline">Actualizar</button>
                             </div>
-                            <!-- Filters -->
-                            <div class="flex gap-4 flex-wrap">
-                                <select v-model="filterRazon" class="bg-gray-50 border-gray-200 rounded-lg text-xs py-1.5 px-3">
-                                    <option value="">Todas las Razones</option>
-                                    <option v-for="rs in uniqueRazonesInLogs" :value="rs">{{ rs }}</option>
-                                </select>
-                                <select v-model="filterBrand" class="bg-gray-50 border-gray-200 rounded-lg text-xs py-1.5 px-3">
-                                    <option value="">Todas las Marcas</option>
-                                    <option v-for="b in uniqueBrandsInLogs" :value="b">{{ b }}</option>
-                                </select>
-                                <select v-model="filterModel" class="bg-gray-50 border-gray-200 rounded-lg text-xs py-1.5 px-3 max-w-[150px]">
-                                    <option value="">Todos los Modelos</option>
-                                    <option v-for="m in catalogModelsForFilter" :value="m">{{ m }}</option>
-                                </select>
-                                <input v-model="filterDealer" placeholder="Filtrar por Dealer..." class="bg-gray-50 border-gray-200 rounded-lg text-xs py-1.5 px-3 w-48">
-                                <select v-model="filterStatus" class="bg-gray-50 border-gray-200 rounded-lg text-xs py-1.5 px-3">
-                                    <option value="">Todos los Estados</option>
-                                    <option value="success">Exitosos</option>
-                                    <option value="error">Errores</option>
-                                </select>
+                            <!-- Unified Filters Bar -->
+                            <div class="flex flex-col lg:flex-row gap-3 lg:items-center">
+                                <!-- Period Group -->
+                                <div class="flex items-center justify-between lg:justify-start gap-2 lg:border-r border-gray-200 lg:pr-3 shrink-0">
+                                    <span class="text-xs font-bold text-gray-400 uppercase tracking-wider whitespace-nowrap">Período</span>
+                                    <select v-model="selectedPeriod" @change="fetchDashboardStats" class="bg-gray-100 border-transparent rounded-lg text-xs py-1.5 px-3 font-semibold text-gray-700 cursor-pointer focus:ring-0 w-32 lg:w-auto">
+                                        <option value="today">Hoy</option>
+                                        <option value="yesterday">Ayer</option>
+                                        <option value="7d">Últimos 7 días</option>
+                                        <option value="30d">Últimos 30 días</option>
+                                    </select>
+                                </div>
+                                
+                                <!-- Main Filters Grid -->
+                                <div class="grid grid-cols-2 lg:flex lg:flex-nowrap gap-2 w-full lg:w-auto flex-1">
+                                    <select v-model="filterRazon" class="bg-gray-50 border-gray-200 rounded-lg text-xs py-1.5 px-3 w-full lg:w-40 xl:w-56 truncate">
+                                        <option value="">Todas las Razones</option>
+                                        <option v-for="rs in uniqueRazonesInLogs" :value="rs">{{ rs }}</option>
+                                    </select>
+                                    <select v-model="filterBrand" class="bg-gray-50 border-gray-200 rounded-lg text-xs py-1.5 px-3 w-full lg:w-32 truncate">
+                                        <option value="">Todas las Marcas</option>
+                                        <option v-for="b in uniqueBrandsInLogs" :value="b">{{ b }}</option>
+                                    </select>
+                                    <select v-model="filterModel" class="bg-gray-50 border-gray-200 rounded-lg text-xs py-1.5 px-3 w-full lg:w-36 truncate">
+                                        <option value="">Todos los Modelos</option>
+                                        <option v-for="m in catalogModelsForFilter" :value="m">{{ m }}</option>
+                                    </select>
+                                    <input v-model="filterDealer" placeholder="Buscar Dealer..." class="bg-gray-50 border-gray-200 rounded-lg text-xs py-1.5 px-3 w-full lg:flex-1 min-w-[100px]">
+                                    <select v-model="filterStatus" class="bg-gray-50 border-gray-200 rounded-lg text-xs py-1.5 px-3 w-full lg:w-32 col-span-2 lg:col-span-1">
+                                        <option value="">Estado: Todos</option>
+                                        <option value="success">Exitosos</option>
+                                        <option value="error">Errores</option>
+                                    </select>
+                                </div>
                             </div>
+
                         </div>
                         <table class="w-full text-sm">
                             <thead class="bg-gray-50/50 text-gray-500 font-medium">
@@ -321,7 +364,8 @@ module.exports = (req, res) => {
         </div>
         
         <!-- LOG DETAILS MODAL -->
-        <div v-if="selectedLog" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm" @click.self="selectedLog = null">
+        <!-- Added hidden-force class to ensure it is hidden if Vue fails or before load. :class logic removes it. -->
+        <div :class="['fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm', selectedLog ? '' : 'hidden-force']" v-if="selectedLog" @click.self="selectedLog = null">
             <div class="bg-white rounded-3xl shadow-float max-w-2xl w-full max-h-[90vh] flex flex-col overflow-hidden animate-fade-in">
                 <div class="p-6 border-b border-gray-50 flex justify-between items-center bg-gray-50/50">
                     <div>
@@ -390,7 +434,9 @@ module.exports = (req, res) => {
                 razonesSociales: {},
                 modelsByBrand: {},
                 dashboardStats: { summary: { stats: { total: 0, error: 0 } }, history: [], recentLogs: [] },
+                dashboardStats: { summary: { stats: { total: 0, error: 0 } }, history: [], recentLogs: [] },
                 selectedPeriod: 'today',
+                includeHistory: false,
                 
                 searchQuery: '',
                 selectedRazonKey: null,
@@ -399,7 +445,10 @@ module.exports = (req, res) => {
                 pendingNewKey: '',
                 newModelInput: '',
                 newDealerInput: '',
+                newModelInput: '',
+                newDealerInput: '',
                 simDealer: '', simBrand: '', simResult: null,
+                showErrors: true,
 
                 // Client-side Filters
                 filterRazon: '',
@@ -486,7 +535,7 @@ module.exports = (req, res) => {
                 
                 async fetchDashboardStats() {
                     try {
-                        const res = await fetch('/api/admin/stats?period=' + this.selectedPeriod);
+                        const res = await fetch('/api/admin/stats?period=' + this.selectedPeriod + '&includeHistory=' + this.includeHistory);
                         if(res.ok) this.dashboardStats = await res.json();
                     } catch(e) {}
                 },
@@ -511,6 +560,24 @@ module.exports = (req, res) => {
                 
                 openLogDetails(log) {
                     this.selectedLog = log;
+                },
+
+                async resetHistory() {
+                    if(!confirm('¿Estás seguro de resetear el historial? Esto creará un backup.')) return;
+                    try {
+                        const res = await fetch('/api/admin/stats', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ action: 'clear' })
+                        });
+                        const data = await res.json();
+                        if(data.success) {
+                            alert('Reset exitoso. Backup ID: ' + data.backupId);
+                            this.fetchDashboardStats();
+                        } else {
+                            alert('Error: ' + (data.error || 'Desconocido'));
+                        }
+                    } catch(e) { alert('Error de red'); }
                 },
 
                 // Razones & Models Logic

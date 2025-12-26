@@ -93,7 +93,7 @@ const AnalyticsService = {
     /**
      * Obtiene los datos para el dashboard
      */
-    async getDashboardStats(period = 'today') {
+    async getDashboardStats(period = 'today', includeHistory = false) {
         if (!kv) return { error: 'KV no configurado' };
 
         // Helper to get date string in Argentina Timezone (UTC-3)
@@ -109,7 +109,36 @@ const AnalyticsService = {
 
         try {
             // Get recent logs
-            const logs = await kv.lrange(KEYS.RECENT_LOGS, 0, 49);
+            let logs = await kv.lrange(KEYS.RECENT_LOGS, 0, MAX_LOGS - 1);
+
+            if (includeHistory) {
+                // Find backup keys
+                const backupKeys = await kv.keys(KEYS.RECENT_LOGS + ':backup:*');
+                if (backupKeys && backupKeys.length > 0) {
+                    const pipeline = kv.pipeline();
+                    backupKeys.forEach(k => pipeline.lrange(k, 0, MAX_LOGS - 1));
+                    const backupResults = await pipeline.exec();
+
+                    // Merge results
+                    backupResults.forEach(backupLogs => {
+                        if (Array.isArray(backupLogs)) {
+                            logs = logs.concat(backupLogs);
+                        }
+                    });
+
+                    // Deduplicate based on ID just in case
+                    const uniqueLogs = new Map();
+                    logs.forEach(l => { if (l.id) uniqueLogs.set(l.id, l); });
+
+                    logs = Array.from(uniqueLogs.values());
+
+                    // Sort by timestamp descending
+                    logs.sort((a, b) => new Date(b.ts) - new Date(a.ts));
+
+                    // Limit to avoid sending huge payload
+                    logs = logs.slice(0, 500);
+                }
+            }
 
             // Calculate Date Range based on period
             let daysToFetch = 1;
@@ -167,9 +196,23 @@ const AnalyticsService = {
                 data: results[index] || { total: 0, success: 0, error: 0 }
             }));
 
+            // Fetch current active offset if we are NOT showing history
+            let offsetData = null;
+            if (!includeHistory) {
+                offsetData = await kv.get('analytics:stats:offset:current');
+            }
+
             // Aggregate
             periodData.forEach(item => {
-                const s = item.data;
+                let s = { ...item.data };
+
+                // Apply offset subtraction if applicable (only for the specific date of the snapshot)
+                if (offsetData && item.date === offsetData.date) {
+                    s.total = Math.max(0, parseInt(s.total || 0) - parseInt(offsetData.total || 0));
+                    s.success = Math.max(0, parseInt(s.success || 0) - parseInt(offsetData.success || 0));
+                    s.error = Math.max(0, parseInt(s.error || 0) - parseInt(offsetData.error || 0));
+                }
+
                 aggregatedStats.total += parseInt(s.total || 0);
                 aggregatedStats.success += parseInt(s.success || 0);
                 aggregatedStats.error += parseInt(s.error || 0);
@@ -191,6 +234,77 @@ const AnalyticsService = {
         } catch (error) {
             console.error('[Analytics] Error leyendo stats:', error);
             return { error: 'Error leyendo base de datos' };
+        }
+    },
+
+    /**
+     * Resets current metrics by moving them to a backup key.
+     */
+    async clearHistory() {
+        if (!kv) return { error: 'KV no configurado' };
+        try {
+            const timestamp = Date.now();
+            const backupSuffix = `:backup:${timestamp}`;
+
+            // 1. Rename Recent Logs
+            const logsExists = await kv.exists(KEYS.RECENT_LOGS);
+            if (logsExists) {
+                await kv.rename(KEYS.RECENT_LOGS, KEYS.RECENT_LOGS + backupSuffix);
+                // Store backup key reference
+                await kv.set('analytics:backup:last_ref', timestamp);
+            }
+
+            // 2. Snapshot current Stats to use as Offset (to make them appear as 0)
+            const now = new Date();
+            const getArgDate = (d) => {
+                const offset = -3;
+                const utc = d.getTime() + (d.getTimezoneOffset() * 60000);
+                const nd = new Date(utc + (3600000 * offset));
+                return nd.toISOString().split('T')[0];
+            };
+            const dailyKey = KEYS.DAILY_STATS + getArgDate(now);
+            const currentStats = await kv.hgetall(dailyKey);
+
+            if (currentStats) {
+                // Save this snapshot as the "zero point" for the current view
+                const offsetKey = 'analytics:stats:offset:current';
+                await kv.set(offsetKey, { ...currentStats, date: getArgDate(now) });
+            }
+
+            return { success: true, backupId: timestamp, message: 'History cleared' };
+        } catch (error) {
+            console.error('[Analytics] Error clearing history:', error);
+            return { error: error.message };
+        }
+    },
+
+    /**
+     * Restore logs from the last backup.
+     */
+    async restoreHistory() {
+        if (!kv) return { error: 'KV no configurado' };
+        try {
+            const lastBackupTs = await kv.get('analytics:backup:last_ref');
+            if (!lastBackupTs) return { success: false, message: 'No backup found' };
+
+            const backupKey = KEYS.RECENT_LOGS + `:backup:${lastBackupTs}`;
+            const exists = await kv.exists(backupKey);
+
+            if (exists) {
+                // If current logs exist, maybe merge? Or just overwrite?
+                // Overwrite seems safer for "Undo" functionality.
+                await kv.del(KEYS.RECENT_LOGS); // clear current "fresh" logs
+                await kv.rename(backupKey, KEYS.RECENT_LOGS); // restore old ones
+
+                // Clear offset to restore global stats visibility
+                await kv.del('analytics:stats:offset:current');
+
+                return { success: true, message: 'History restored' };
+            }
+            return { success: false, message: 'Backup key not found' };
+        } catch (error) {
+            console.error('[Analytics] Error restoring history:', error);
+            return { error: error.message };
         }
     }
 };

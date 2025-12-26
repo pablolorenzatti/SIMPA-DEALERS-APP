@@ -289,7 +289,13 @@
     ],
     "dealers": [
       "ROYAL ENFIELD CATAMARCA"
-    ]
+    ],
+    "pipelineMapping": {
+      "default": {
+        "pipeline": "default",
+        "stage": "appointmentscheduled"
+      }
+    }
   },
   "MOTOLIFE SA": {
     "portalId": null,
