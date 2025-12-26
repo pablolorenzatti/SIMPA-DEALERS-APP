@@ -1,7 +1,13 @@
+
 const hubspot = require('@hubspot/api-client');
 const { sendSlackErrorNotification } = require('./utils/slack-notifier');
 const ConfigService = require('./services/config-service');
 const LeadProcessor = require('./services/lead-processor');
+const AnalyticsService = require('./services/analytics-service'); // Nuevo servicio de Analytics
+const path = require('path'); // Added for path.join
+
+// Fallback configuration if KV fails
+const FALLBACK_CONFIG_PATH = path.join(process.cwd(), 'src/config/razones-sociales.json');
 
 // Funciones utilitarias (Delegadas a LeadProcessor donde sea posible, mantenemos locales si son ui-specific)
 function sanitize(value) {
@@ -14,8 +20,12 @@ function normalizeKey(value) {
 
 function sanitizeName(value) {
   if (!value) return value;
-  // Permitir letras, números, espacios y guiones. Eliminar caracteres especiales.
-  return value.replace(/[^a-zA-Z0-9\s-]/g, '');
+  // Normalize, remove accents, and allow strictly alphanumeric + spaces (NO hyphens/special chars)
+  return value
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-zA-Z0-9\s]/g, '')
+    .trim();
 }
 
 function getObjectTypeKey(objectType) {
@@ -34,7 +44,7 @@ async function propertyExists(hubspotClient, objectType, propertyName) {
       return false;
     }
     // Para otros errores, asumir que no existe para evitar fallos
-    console.warn(`[forward-lead] ⚠️ Error verificando propiedad ${propertyName} en ${objectType}: ${error.message}`);
+    console.warn(`[forward - lead] ⚠️ Error verificando propiedad ${propertyName} en ${objectType}: ${error.message} `);
     return false;
   }
 }
@@ -45,7 +55,7 @@ async function propertyExists(hubspotClient, objectType, propertyName) {
 // MODIFICADO: No crea la propiedad si no existe, solo agrega opción si la propiedad existe
 async function addOptionToProperty(hubspotClient, objectType, propertyName, newModelOption) {
   const objectTypeKey = getObjectTypeKey(objectType);
-  console.log(`[forward-lead] Verificando opción "${newModelOption}" en ${objectType}:${propertyName}`);
+  console.log(`[forward - lead] Verificando opción "${newModelOption}" en ${objectType}:${propertyName} `);
 
   try {
     // Intentar obtener la propiedad
@@ -54,7 +64,7 @@ async function addOptionToProperty(hubspotClient, objectType, propertyName, newM
       existingProperty = await hubspotClient.crm.properties.coreApi.getByName(objectTypeKey, propertyName);
     } catch (error) {
       // Propiedad no existe
-      console.warn(`[forward-lead] ⚠️ La propiedad ${propertyName} no existe en ${objectType}. No se creará automáticamente.`);
+      console.warn(`[forward - lead] ⚠️ La propiedad ${propertyName} no existe en ${objectType}. No se creará automáticamente.`);
       return { exists: false, added: false, reason: 'property_missing' };
     }
 
@@ -74,21 +84,21 @@ async function addOptionToProperty(hubspotClient, objectType, propertyName, newM
 
     if (matchedOption) {
       const actualValue = matchedOption.value;
-      console.log(`[forward-lead] ✅ Opción "${newModelOption}" ya existe en ${objectType}:${propertyName} (Valor real: "${actualValue}")`);
+      console.log(`[forward - lead] ✅ Opción "${newModelOption}" ya existe en ${objectType}:${propertyName} (Valor real: "${actualValue}")`);
       return { exists: true, added: true, reason: 'already_exists', successValue: actualValue };
     }
 
     // Agregar nueva opción
-    console.log(`[forward-lead] Agregando opción "${newModelOption}" a ${propertyName}...`);
+    console.log(`[forward - lead] Agregando opción "${newModelOption}" a ${propertyName}...`);
     const maxDisplayOrder = existingOptions.length > 0 ? Math.max(...existingOptions.map(opt => opt.displayOrder ?? -1)) : -1;
     const newOption = { label: newModelOption, value: newModelOption, hidden: false, displayOrder: maxDisplayOrder + 1 };
     const updateDefinition = { options: [...existingOptions, newOption] };
     await hubspotClient.crm.properties.coreApi.update(objectTypeKey, propertyName, updateDefinition);
-    console.log(`[forward-lead] ✅ Opción "${newModelOption}" agregada exitosamente`);
+    console.log(`[forward - lead] ✅ Opción "${newModelOption}" agregada exitosamente`);
     return { exists: true, added: true, reason: 'added', successValue: newModelOption };
 
   } catch (error) {
-    console.warn(`[forward-lead] ⚠️ Error asegurando opción en ${objectType}:${propertyName}: ${error.message}`);
+    console.warn(`[forward - lead] ⚠️ Error asegurando opción en ${objectType}:${propertyName}: ${error.message} `);
     return { exists: true, added: false, reason: 'error', error: error.message };
   }
 }
@@ -105,6 +115,21 @@ module.exports = async (req, res) => {
     return res.status(405).json({ status: 'error', message: 'Method Not Allowed' });
   }
 
+  // Variables para Analytics
+  let dealerName = 'Unknown';
+  let originalBrandName = 'Unknown';
+  let inferredRazon = null;
+  let razonSocial = null; // Lifted to outer scope to be available in catch block
+
+  // Execution Log for detailed debugging
+  const executionSteps = [];
+  const logStep = (step, data = null) => {
+    const entry = { ts: new Date().toISOString(), step, data };
+    executionSteps.push(entry);
+    if (data) console.log(`[step] ${step}`, JSON.stringify(data).substring(0, 200));
+    else console.log(`[step] ${step}`);
+  };
+
   try {
     const event = req.body || {};
     const inputFields = event.inputFields || {};
@@ -114,41 +139,60 @@ module.exports = async (req, res) => {
     const dealerNameInput = sanitize(inputFields.dealer_name);
     const marca = sanitize(inputFields.contact_brand);
 
+    // Assign to analytics variable
+    dealerName = dealerNameInput || 'Unknown';
+    originalBrandName = marca || 'Unknown';
+
     // DEBUG: Log del valor de marca inmediatamente después de obtenerlo
-    console.log(`[forward-lead] 🔍 DEBUG - Marca obtenida de inputFields.contact_brand: "${marca}" (tipo: ${typeof marca})`);
-    console.log(`[forward-lead] 🔍 DEBUG - inputFields.contact_brand raw: ${JSON.stringify(inputFields.contact_brand)}`);
+    console.log(`[forward - lead] 🔍 DEBUG - Marca obtenida de inputFields.contact_brand: "${originalBrandName}"(tipo: ${typeof originalBrandName})`);
+    console.log(`[forward - lead] 🔍 DEBUG - inputFields.contact_brand raw: ${JSON.stringify(inputFields.contact_brand)} `);
 
     // Validar parámetros requeridos
     // NOTA: razon_social ya no es estrictamente requerido aquí porque puede ser inferido más adelante
 
     // Validar parámetros requeridos para inferencia
-    if (!dealerNameInput) {
+    let assignedPipeline = null;
+    let assignedStage = null;
+
+    if (!dealerName) {
+      logStep('Error: Missing dealer_name');
       throw new Error('El campo "dealer_name" es obligatorio');
     }
+    logStep('Input Validation Passed', { dealerName, originalBrandName });
 
     // Resolver Razón Social usando LeadProcessor
-    let razonSocial = razonSocialInput;
+    razonSocial = razonSocialInput; // Assign to outer variable
 
     if (!razonSocial) {
-      console.log(`[forward-lead] Razón social no proporcionada. Intentando inferir desde dealer "${dealerNameInput}" y marca "${marca || '(no proporcionada)'}"...`);
+      console.log(`[forward - lead] Razón social no proporcionada.Intentando inferir desde dealer "${dealerName}" y marca "${originalBrandName || '(no proporcionada)'}"...`);
 
       if (!razonesSocialesConfig) {
         throw new Error('No se pudo cargar la configuración de razones sociales para inferir la entidad legal');
       }
 
       // Usar servicio centralizado para inferencia
-      const inferenceMsg = LeadProcessor.inferRazonSocial(razonesSocialesConfig, dealerNameInput, marca);
+      inferredRazon = LeadProcessor.inferRazonSocial(razonesSocialesConfig, dealerName, originalBrandName);
 
-      if (inferenceMsg.razonSocial) {
-        razonSocial = inferenceMsg.razonSocial;
-        console.log(`[forward-lead] ✅ Razón social inferida: "${razonSocial}" (Método: ${inferenceMsg.method}, Confianza: ${inferenceMsg.confidence})`);
+      if (inferredRazon.razonSocial) {
+        razonSocial = inferredRazon.razonSocial;
+        console.log(`[forward - lead] ✅ Razón social inferida: "${razonSocial}"(Método: ${inferredRazon.method}, Confianza: ${inferredRazon.confidence})`);
       } else {
-        console.error(`[forward-lead] ❌ No se pudo inferir la razón social. Detalles: ${inferenceMsg.reason}`);
-        if (inferenceMsg.reason === 'Dealer name missing') {
+        console.error(`[forward - lead] ❌ No se pudo inferir la razón social.Detalles: ${inferredRazon.reason} `);
+        logStep('Razon Social Inference Failed', { reason: inferredRazon.reason });
+        if (inferredRazon.reason === 'Dealer name missing') {
           throw new Error('El campo "dealer_name" es obligatorio para inferir la razón social');
         }
-        throw new Error(`No se pudo determinar la razón social para el dealer "${dealerNameInput}". Verifica configuración.`);
+        throw new Error(`No se pudo determinar la razón social para el dealer "${dealerName}".Verifica configuración.`);
       }
+    } else {
+      // If razonSocial was provided, create a mock inferredRazon object for analytics
+      inferredRazon = {
+        razonSocial: razonSocial,
+        method: 'provided',
+        confidence: 'high',
+        reason: 'Razon social provided in input'
+      };
+      logStep('Razon Social Provided', { razonSocial });
     }
 
     // Resolver access token
@@ -156,7 +200,7 @@ module.exports = async (req, res) => {
     let accessToken = null;
     let tokenSource = null;
 
-    console.log(`[forward-lead] Usando Razón Social: "${razonSocial}"`);
+    console.log(`[forward - lead] Usando Razón Social: "${razonSocial}"`);
 
     // Buscar el tokenEnv en el archivo de configuración razones-sociales.json
     let tokenEnv = null;
@@ -169,35 +213,37 @@ module.exports = async (req, res) => {
     tokenEnv = tokenDetermination.tokenEnv;
 
     if (tokenDetermination.source === 'config') {
-      console.log(`[forward-lead] ✅ Token configurado encontrado: ${tokenEnv}`);
+      console.log(`[forward - lead] ✅ Token configurado encontrado: ${tokenEnv} `);
     } else {
-      console.warn(`[forward-lead] ⚠️ Usando fallback para token: ${tokenEnv}`);
+      console.warn(`[forward - lead] ⚠️ Usando fallback para token: ${tokenEnv} `);
     }
 
     if (tokenEnv) {
-      console.log(`[forward-lead] Obteniendo token desde variable de entorno: ${tokenEnv}`);
+      console.log(`[forward - lead] Obteniendo token desde variable de entorno: ${tokenEnv} `);
       accessToken = process.env[tokenEnv];
 
       if (accessToken) {
-        tokenSource = `variable de entorno ${tokenEnv}`;
-        console.log(`[forward-lead] ✅ Token obtenido desde variable de entorno: ${tokenEnv}`);
+        tokenSource = `variable de entorno ${tokenEnv} `;
+        logStep('Token Resolved', { tokenEnv, source: tokenSource });
+        console.log(`[forward - lead] ✅ Token obtenido desde variable de entorno: ${tokenEnv} `);
       } else {
-        console.error(`[forward-lead] ❌ Variable de entorno ${tokenEnv} no existe o está vacía`);
-        throw new Error(`No se encontró token para la razón social "${razonSocial}". Define la variable ${tokenEnv} en Vercel.`);
+        console.error(`[forward - lead] ❌ Variable de entorno ${tokenEnv} no existe o está vacía`);
+        logStep('Token Missing', { tokenEnv });
+        throw new Error(`No se encontró token para la razón social "${razonSocial}".Define la variable ${tokenEnv} en Vercel.`);
       }
     } else {
-      console.error(`[forward-lead] ❌ No se pudo determinar el nombre de la variable de entorno para "${razonSocial}"`);
-      throw new Error(`No se pudo determinar el token para la razón social "${razonSocial}". Verifica la configuración en razones-sociales.json.`);
+      console.error(`[forward - lead] ❌ No se pudo determinar el nombre de la variable de entorno para "${razonSocial}"`);
+      throw new Error(`No se pudo determinar el token para la razón social "${razonSocial}".Verifica la configuración en razones - sociales.json.`);
     }
 
     // Logging simplificado del token utilizado
     const tokenPreview = accessToken.length > 20
-      ? `${accessToken.substring(0, 10)}...${accessToken.substring(accessToken.length - 10)}`
+      ? `${accessToken.substring(0, 10)}...${accessToken.substring(accessToken.length - 10)} `
       : '***';
-    console.log(`[forward-lead] Token utilizado (preview): ${tokenPreview}`);
-    console.log(`[forward-lead] Fuente del token: ${tokenSource}`);
-    console.log(`[forward-lead] Razón social: ${razonSocialInput}`);
-    console.log(`[forward-lead] Iniciando envío de lead al dealer: ${dealerNameInput} (${razonSocialInput})`);
+    console.log(`[forward - lead] Token utilizado(preview): ${tokenPreview} `);
+    console.log(`[forward - lead] Fuente del token: ${tokenSource} `);
+    console.log(`[forward - lead] Razón social: ${razonSocialInput} `);
+    console.log(`[forward - lead] Iniciando envío de lead al dealer: ${dealerName} (${razonSocialInput})`);
 
     // Inicializar cliente de HubSpot con retries automáticos
     const hubspotClient = new hubspot.Client({
@@ -213,19 +259,21 @@ module.exports = async (req, res) => {
       contactProperties = contactResponse.results || [];
       const dealResponse = await hubspotClient.crm.properties.coreApi.getAll('deals', false);
       dealProperties = dealResponse.results || [];
-      console.log(`[forward-lead] Conexión exitosa. Contactos: ${contactProperties.length}, Deals: ${dealProperties.length}`);
+      console.log(`[forward - lead] Conexión exitosa.Contactos: ${contactProperties.length}, Deals: ${dealProperties.length} `);
+      logStep('HubSpot Connection Success', { contactsProps: contactProperties.length });
     } catch (error) {
       console.error('[forward-lead] Error obteniendo propiedades:', error.message);
-      throw new Error(`Error conectando con HubSpot: ${error.message}`);
+      logStep('HubSpot Connection Failed', { error: error.message });
+      throw new Error(`Error conectando con HubSpot: ${error.message} `);
     }
 
     // Obtener datos del contacto
     const contactData = {
-      firstname: sanitize(inputFields.contact_firstname) || '',
-      lastname: sanitize(inputFields.contact_lastname) || '',
+      firstname: sanitizeName(inputFields.contact_firstname) || '',
+      lastname: sanitizeName(inputFields.contact_lastname) || '',
       email: sanitize(inputFields.contact_email) || '',
       phone: sanitize(inputFields.contact_phone) || '',
-      city: sanitize(inputFields.contact_city) || ''
+      city: sanitizeName(inputFields.contact_city) || ''
     };
 
     // Obtener IDs de SIMPA (origen) si están disponibles
@@ -233,10 +281,10 @@ module.exports = async (req, res) => {
     const originDealId = sanitize(inputFields.origin_deal_id);
 
     if (originContactId) {
-      console.log(`[forward-lead] ID de contacto SIMPA recibido: ${originContactId}`);
+      console.log(`[forward - lead] ID de contacto SIMPA recibido: ${originContactId} `);
     }
     if (originDealId) {
-      console.log(`[forward-lead] ID de negocio SIMPA recibido: ${originDealId}`);
+      console.log(`[forward - lead] ID de negocio SIMPA recibido: ${originDealId} `);
     }
 
     // Validar que al menos tenemos email o nombre
@@ -244,17 +292,18 @@ module.exports = async (req, res) => {
       throw new Error('Se requiere al menos email o nombre del contacto');
     }
 
-    console.log(`[forward-lead] === Iniciando creación/actualización de contacto y deal ===`);
-    console.log(`[forward-lead] Datos del contacto:`, JSON.stringify(contactData, null, 2));
+    console.log(`[forward - lead] === Iniciando creación / actualización de contacto y deal === `);
+    console.log(`[forward - lead] Datos del contacto: `, JSON.stringify(contactData, null, 2));
 
     // 1. Buscar o crear contacto
     let contactId = null;
     let contactAction = 'created';
+    let contactResponse = null; // To store the actual contact object
 
     try {
       // Si tenemos email, buscar por email primero
       if (contactData.email) {
-        console.log(`[forward-lead] Buscando contacto por email: ${contactData.email}`);
+        console.log(`[forward - lead] Buscando contacto por email: ${contactData.email} `);
         try {
           const searchResponse = await hubspotClient.crm.contacts.searchApi.doSearch({
             filterGroups: [
@@ -275,20 +324,21 @@ module.exports = async (req, res) => {
 
           if (searchResponse.results && searchResponse.results.length > 0) {
             contactId = searchResponse.results[0].id;
+            contactResponse = searchResponse.results[0]; // Store the found contact
             contactAction = 'updated';
-            console.log(`[forward-lead] ✅ Contacto encontrado por email. ID: ${contactId}`);
+            console.log(`[forward - lead] ✅ Contacto encontrado por email.ID: ${contactId} `);
           } else {
-            console.log(`[forward-lead] No se encontró contacto con email: ${contactData.email}`);
+            console.log(`[forward - lead] No se encontró contacto con email: ${contactData.email} `);
           }
         } catch (searchError) {
-          console.warn(`[forward-lead] ⚠️ Error buscando contacto por email: ${searchError.message}`);
+          console.warn(`[forward - lead] ⚠️ Error buscando contacto por email: ${searchError.message} `);
           // Continuar con la creación si la búsqueda falla
         }
       }
 
       // Si no encontramos por email, crear nuevo contacto
       if (!contactId) {
-        console.log(`[forward-lead] Creando nuevo contacto...`);
+        console.log(`[forward - lead] Creando nuevo contacto...`);
         const contactProperties = {
           firstname: sanitizeName(contactData.firstname),
           lastname: sanitizeName(contactData.lastname),
@@ -300,7 +350,7 @@ module.exports = async (req, res) => {
         // Agregar ID de contacto SIMPA si está disponible
         if (originContactId) {
           contactProperties.id_contacto_simpa = originContactId;
-          console.log(`[forward-lead] Agregando id_contacto_simpa: ${originContactId}`);
+          console.log(`[forward - lead] Agregando id_contacto_simpa: ${originContactId} `);
         }
 
         // Agregar propiedades adicionales si están disponibles
@@ -316,10 +366,11 @@ module.exports = async (req, res) => {
 
         contactId = newContact.id;
         contactAction = 'created';
-        console.log(`[forward-lead] ✅ Contacto creado exitosamente. ID: ${contactId}`);
+        logStep('Contact Created', { contactId });
+        console.log(`[forward - lead] ✅ Contacto creado exitosamente.ID: ${contactId} `);
       } else {
         // Actualizar contacto existente
-        console.log(`[forward-lead] Actualizando contacto existente...`);
+        console.log(`[forward - lead] Actualizando contacto existente...`);
         const updateProperties = {};
         if (contactData.firstname) updateProperties.firstname = contactData.firstname;
         if (contactData.lastname) updateProperties.lastname = contactData.lastname;
@@ -329,19 +380,20 @@ module.exports = async (req, res) => {
         // Agregar o actualizar ID de contacto SIMPA si está disponible
         if (originContactId) {
           updateProperties.id_contacto_simpa = originContactId;
-          console.log(`[forward-lead] Actualizando id_contacto_simpa: ${originContactId}`);
+          console.log(`[forward - lead] Actualizando id_contacto_simpa: ${originContactId} `);
         }
 
         if (Object.keys(updateProperties).length > 0) {
           await hubspotClient.crm.contacts.basicApi.update(contactId, {
             properties: updateProperties
           });
-          console.log(`[forward-lead] ✅ Contacto actualizado exitosamente`);
+          logStep('Contact Updated', { contactId, updatedFields: Object.keys(updateProperties) });
+          console.log(`[forward - lead] ✅ Contacto actualizado exitosamente`);
         }
       }
     } catch (contactError) {
-      console.error(`[forward-lead] ❌ Error procesando contacto:`, contactError.message);
-      console.error(`[forward-lead] Error completo:`, JSON.stringify(contactError, null, 2));
+      console.error(`[forward - lead] ❌ Error procesando contacto: `, contactError.message);
+      console.error(`[forward - lead] Error completo: `, JSON.stringify(contactError, null, 2));
 
       // Extraer información detallada del error
       let contactErrorDetails = contactError.message || 'Error desconocido al procesar el contacto';
@@ -353,11 +405,11 @@ module.exports = async (req, res) => {
             contactErrorDetails = errorBody.message;
           }
         } catch (parseError) {
-          console.warn(`[forward-lead] ⚠️ Error parseando body del error: ${parseError.message}`);
+          console.warn(`[forward - lead] ⚠️ Error parseando body del error: ${parseError.message} `);
         }
       }
 
-      throw new Error(`Error procesando contacto: ${contactErrorDetails}`);
+      throw new Error(`Error procesando contacto: ${contactErrorDetails} `);
     }
 
     // 2. Crear deal asociado al contacto
@@ -366,20 +418,20 @@ module.exports = async (req, res) => {
     let dealErrorDetails = null;
 
     try {
-      console.log(`[forward-lead] Creando deal para el contacto ${contactId}...`);
+      console.log(`[forward - lead] Creando deal para el contacto ${contactId}...`);
 
       const dealProperties = {
-        dealname: `${contactData.firstname || ''} ${contactData.lastname || ''} - ${dealerNameInput}`.trim() || `Lead - ${dealerNameInput}`
+        dealname: `${contactData.firstname || ''} ${contactData.lastname || ''} - ${dealerNameInput} `.trim() || `Lead - ${dealerNameInput} `
       };
 
       // Agregar ID de negocio SIMPA si está disponible
       if (originDealId) {
         dealProperties.id_negocio_simpa = originDealId;
-        console.log(`[forward-lead] Agregando id_negocio_simpa: ${originDealId}`);
+        console.log(`[forward - lead] Agregando id_negocio_simpa: ${originDealId} `);
       }
 
       // LÓGICA DE ASIGNACIÓN DINÁMICA DE PIPELINE (Refactorizada con LeadProcessor)
-      console.log(`[forward-lead] 🔍 Determinando Pipeline para "${razonSocial}"...`);
+      console.log(`[forward - lead] 🔍 Determinando Pipeline para "${razonSocial}"...`);
 
       const pipelineDetermination = LeadProcessor.determinePipeline(
         rsConfig,  // Config de la RS (puede ser undefined si no existe en config pero se infirió nombre)
@@ -389,22 +441,22 @@ module.exports = async (req, res) => {
         dealerNameInput
       );
 
-      const assignedPipeline = pipelineDetermination.pipeline;
-      const assignedStage = pipelineDetermination.stage;
+      assignedPipeline = pipelineDetermination.pipeline;
+      assignedStage = pipelineDetermination.stage;
       const pipelineSource = pipelineDetermination.source;
 
-      console.log(`[forward-lead] Pipeline asignado: ${assignedPipeline} (Fuente: ${pipelineSource})`);
-      console.log(`[forward-lead] Stage asignado: ${assignedStage}`);
+      console.log(`[forward - lead] Pipeline asignado: ${assignedPipeline} (Fuente: ${pipelineSource})`);
+      console.log(`[forward - lead] Stage asignado: ${assignedStage} `);
 
       // Aplicar propiedades personalizadas usando LeadProcessor
-      console.log(`[forward-lead] 🔍 Calculando Propiedades Personalizadas...`);
+      console.log(`[forward - lead] 🔍 Calculando Propiedades Personalizadas...`);
       const customPropsCalculated = LeadProcessor.determineCustomProperties(rsConfig, marca);
 
       if (Object.keys(customPropsCalculated).length > 0) {
-        console.log(`[forward-lead] 📋 Propiedades personalizadas calculadas:`, JSON.stringify(customPropsCalculated));
+        console.log(`[forward - lead] 📋 Propiedades personalizadas calculadas: `, JSON.stringify(customPropsCalculated));
         for (const [key, value] of Object.entries(customPropsCalculated)) {
           dealProperties[key] = value;
-          console.log(`[forward-lead] ✅ Agregando propiedad personalizada: ${key} = ${value}`);
+          console.log(`[forward - lead] ✅ Agregando propiedad personalizada: ${key} = ${value} `);
         }
       }
 
@@ -432,14 +484,14 @@ module.exports = async (req, res) => {
             // IMPORTANTE: Usar successValue si existe (valor real en HubSpot), sino usar el input
             const valueToUse = resultMarca.successValue || marca;
             dealProperties.marca_simpa = valueToUse;
-            console.log(`[forward-lead] Agregando marca_simpa: ${valueToUse}`);
+            console.log(`[forward - lead] Agregando marca_simpa: ${valueToUse} `);
           } else {
             // Intentar agregarlo (aunque addOptionToProperty ya lo intenta si no existe)
             if (resultMarca.added) {
               dealProperties.marca_simpa = marca;
-              console.log(`[forward-lead] Agregando nueva marca_simpa: ${marca}`);
+              console.log(`[forward - lead] Agregando nueva marca_simpa: ${marca} `);
             } else {
-              console.warn(`[forward-lead] ⚠️ No se pudo asignar marca_simpa. Razón: ${resultMarca.reason}`);
+              console.warn(`[forward - lead] ⚠️ No se pudo asignar marca_simpa.Razón: ${resultMarca.reason} `);
             }
           }
         }
@@ -454,13 +506,13 @@ module.exports = async (req, res) => {
         if (resultSimpa.exists) {
           const valueToUse = resultSimpa.successValue || contactModel;
           dealProperties.modelo_simpa = valueToUse;
-          console.log(`[forward-lead] Agregando modelo_simpa: ${valueToUse}`);
+          console.log(`[forward - lead] Agregando modelo_simpa: ${valueToUse} `);
         } else {
           if (resultSimpa.added) {
             dealProperties.modelo_simpa = contactModel;
-            console.log(`[forward-lead] Agregando nuevo modelo_simpa: ${contactModel}`);
+            console.log(`[forward - lead] Agregando nuevo modelo_simpa: ${contactModel} `);
           } else {
-            console.warn(`[forward-lead] ⚠️ Propiedad modelo_simpa no existe en el portal del dealer, omitiendo`);
+            console.warn(`[forward - lead] ⚠️ Propiedad modelo_simpa no existe en el portal del dealer, omitiendo`);
           }
         }
       }
@@ -468,11 +520,11 @@ module.exports = async (req, res) => {
       // Usar modelo_{marca} para el modelo específico de la marca (verificar si existe)
       if (marca && contactModel) {
         // DEBUG: Log del valor original de marca antes de cualquier procesamiento
-        console.log(`[forward-lead] ========================================`);
-        console.log(`[forward-lead] 🔍 DEBUG - INICIO PROCESAMIENTO MARCA`);
-        console.log(`[forward-lead] 🔍 DEBUG - Valor original de marca (tipo: ${typeof marca}, longitud: ${marca ? marca.length : 0}): "${marca}"`);
-        console.log(`[forward-lead] 🔍 DEBUG - Valor original de marca (JSON): ${JSON.stringify(marca)}`);
-        console.log(`[forward-lead] 🔍 DEBUG - Valor de contactModel: "${contactModel}"`);
+        console.log(`[forward - lead] ========================================`);
+        console.log(`[forward - lead] 🔍 DEBUG - INICIO PROCESAMIENTO MARCA`);
+        console.log(`[forward - lead] 🔍 DEBUG - Valor original de marca(tipo: ${typeof marca}, longitud: ${marca ? marca.length : 0}): "${marca}"`);
+        console.log(`[forward - lead] 🔍 DEBUG - Valor original de marca(JSON): ${JSON.stringify(marca)} `);
+        console.log(`[forward - lead] 🔍 DEBUG - Valor de contactModel: "${contactModel}"`);
 
         // LÓGICA GENERALIZADA PARA CUALQUIER MARCA
         // Generar candidatos de nombres de propiedad y buscar cuál existe
@@ -481,9 +533,9 @@ module.exports = async (req, res) => {
 
         // Generar candidatos
         // 1. Snake case: "Moto Guzzi" -> "modelo_moto_guzzi"
-        const candidateSnake = `modelo_${marcaLower.replace(/\s+/g, '_')}`;
+        const candidateSnake = `modelo_${marcaLower.replace(/\s+/g, '_')} `;
         // 2. Merged: "Moto Guzzi" -> "modelo_motoguzzi"
-        const candidateMerged = `modelo_${marcaLower.replace(/\s+/g, '')}`;
+        const candidateMerged = `modelo_${marcaLower.replace(/\s+/g, '')} `;
 
         // Lista de candidatos a probar (en orden de preferencia)
         // Si es Moto Morini, históricamente preferimos 'modelo_moto_morini' (snake), pero probaremos ambos
@@ -492,7 +544,7 @@ module.exports = async (req, res) => {
         // Eliminar duplicados (si la marca es una sola palabra, snake y merged son iguales)
         const uniqueCandidates = [...new Set(candidates)];
 
-        console.log(`[forward-lead] � Buscando propiedades candidatas para marca "${marcaString}": ${uniqueCandidates.join(', ')}`);
+        console.log(`[forward - lead] � Buscando propiedades candidatas para marca "${marcaString}": ${uniqueCandidates.join(', ')}`);
 
         let foundProperty = null;
 
@@ -567,31 +619,20 @@ module.exports = async (req, res) => {
       // Asociar con el dealer si hay una propiedad para eso
       if (dealerNameInput) {
         // Intentar usar concesionarios_simpa si existe
-        try {
-          const dealerProperty = await hubspotClient.crm.properties.coreApi.getByName('deals', 'concesionarios_simpa');
-          if (dealerProperty) {
-            // Buscar una coincidencia insensible a mayúsculas/minúsculas
-            const dealerNameNormalized = normalizeKey(dealerNameInput);
-            let matchedOption = null;
+        // Usar addOptionToProperty para asegurar opciones en concesionarios_simpa
+        const resultDealer = await addOptionToProperty(hubspotClient, 'deal', 'concesionarios_simpa', dealerNameInput);
 
-            if (dealerProperty.options && Array.isArray(dealerProperty.options)) {
-              matchedOption = dealerProperty.options.find(opt =>
-                normalizeKey(opt.value) === dealerNameNormalized ||
-                normalizeKey(opt.label) === dealerNameNormalized
-              );
-            }
-
-            if (matchedOption) {
-              dealProperties.concesionarios_simpa = matchedOption.value;
-              console.log(`[forward-lead] ✅ Dealer encontrado en opciones: "${matchedOption.value}" (Input: "${dealerNameInput}")`);
-            } else {
-              // Si no se encuentra, usar el input original y advertir
-              console.warn(`[forward-lead] ⚠️ Dealer "${dealerNameInput}" no encontrado en opciones de concesionarios_simpa. Se usará el valor original.`);
-              dealProperties.concesionarios_simpa = dealerNameInput;
-            }
+        if (resultDealer.exists) {
+          const valueToUse = resultDealer.successValue || dealerNameInput;
+          dealProperties.concesionarios_simpa = valueToUse;
+          console.log(`[forward - lead] Agregando concesionarios_simpa: ${valueToUse} `);
+        } else {
+          if (resultDealer.added) {
+            dealProperties.concesionarios_simpa = dealerNameInput;
+            console.log(`[forward - lead] Agregando nuevo concesionarios_simpa: ${dealerNameInput} `);
+          } else {
+            console.warn(`[forward - lead] ⚠️ No se pudo asignar concesionarios_simpa. Razón: ${resultDealer.reason}`);
           }
-        } catch (propError) {
-          console.warn(`[forward-lead] ⚠️ No se pudo obtener propiedad concesionarios_simpa: ${propError.message}`);
         }
       }
 
@@ -751,9 +792,32 @@ module.exports = async (req, res) => {
     console.log(`[forward-lead] Deal: ${dealAction} - ID: ${dealId || 'N/A'}`);
     console.log(`[forward-lead] =======================`);
 
+    // --- ANALYTICS LOGGING (FINAL STATUS) ---
+    try {
+      await AnalyticsService.logEvent({
+        status: overallSuccess ? 'success' : 'error',
+        dealer: dealerNameInput,
+        brand: originalBrandName || 'Inferred',
+        razonSocial: razonSocial,
+        hsDealId: dealId,
+        portalId: (typeof rsConfig !== 'undefined' && rsConfig) ? rsConfig.portalId : '',
+        error: overallSuccess ? null : successMessage,
+        details: {
+          executionSteps: executionSteps,
+          inputFields: inputFields,
+          contactId: contactId,
+          pipelineId: assignedPipeline,
+          dealStage: assignedStage
+        }
+      });
+    } catch (e) {
+      console.error('[Analytics] Error logging event:', e);
+    }
+
     res.status(200).json({ outputFields });
   } catch (error) {
     console.error('[forward-lead] Error general:', error);
+    if (typeof logStep !== 'undefined') logStep('Fatal Error', { message: error.message });
     console.error('[forward-lead] Stack:', error.stack);
 
     // Extraer información detallada del error
@@ -768,6 +832,7 @@ module.exports = async (req, res) => {
         }
       } catch (parseError) {
         console.warn(`[forward-lead] ⚠️ Error parseando body del error: ${parseError.message}`);
+        if (typeof logStep !== 'undefined') logStep('Fatal Error - Error Parsing Body', { error: parseError.message });
       }
     }
 
@@ -798,8 +863,10 @@ module.exports = async (req, res) => {
           error: error,
           context: context
         });
+        if (typeof logStep !== 'undefined') logStep('Slack Notification Sent');
       } catch (slackError) {
         console.error('[forward-lead] Error enviando notificación a Slack (ignorado para no afectar respuesta):', slackError);
+        if (typeof logStep !== 'undefined') logStep('Error Sending Slack Notification', { error: slackError.message });
       }
     }
 
@@ -807,6 +874,23 @@ module.exports = async (req, res) => {
     if (error.code === 429 || error.statusCode === 429 || error.message.includes('429') || (error.body && JSON.stringify(error.body).includes('RATE_LIMIT'))) {
       const rateLimitMsg = "Se alcanzó el límite de velocidad de la API de HubSpot (Rate Limit). La acción se reintentará automáticamente.";
       console.warn(`[forward-lead] ⚠️ ${rateLimitMsg}`);
+      if (typeof logStep !== 'undefined') logStep('Rate Limit Error', { message: rateLimitMsg });
+
+      // --- ANALYTICS LOGGING (RATE LIMIT) ---
+      try {
+        await AnalyticsService.logEvent({
+          status: 'error',
+          dealer: dealerName,
+          brand: originalBrandName || 'Inferred',
+          razonSocial: razonSocial || 'Unknown',
+          error: "Rate Limit (429)",
+          details: {
+            executionSteps: typeof executionSteps !== 'undefined' ? executionSteps : [],
+            input: req.body ? req.body.inputFields : 'N/A',
+            errorDetails: errorDetails
+          }
+        });
+      } catch (e) { console.error('[Analytics] Error logging rate limit:', e); }
 
       // Devolver 429 explícitamente le indica a HubSpot (y otros clientes) que deben reintentar
       return res.status(429).json({
@@ -818,6 +902,24 @@ module.exports = async (req, res) => {
         }
       });
     }
+
+    // --- ANALYTICS LOGGING (ERROR) ---
+    try {
+      const errorRazon = (typeof inferredRazon !== 'undefined' && inferredRazon) ? inferredRazon.razonSocial : (razonSocial || 'Unknown');
+
+      await AnalyticsService.logEvent({
+        status: 'error',
+        dealer: dealerName,
+        brand: originalBrandName || 'Inferred',
+        razonSocial: errorRazon,
+        error: errorMessage,
+        details: {
+          executionSteps: typeof executionSteps !== 'undefined' ? executionSteps : [],
+          input: req.body ? req.body.inputFields : 'N/A',
+          stack: error.stack
+        }
+      });
+    } catch (e) { console.error('[Analytics] Error logging error:', e); }
 
     res.status(500).json({
       outputFields: {

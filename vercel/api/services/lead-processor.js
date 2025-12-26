@@ -10,7 +10,10 @@ const LeadProcessor = {
      * Normaliza una cadena para comparaciones (lowercase, sin caracteres especiales)
      */
     normalizeKey(value) {
-        return typeof value === 'string' ? value.toLowerCase().replace(/[^a-z0-9]/g, '') : '';
+        if (typeof value !== 'string') return '';
+        return value.normalize("NFD").replace(/[\u0300-\u036f]/g, "") // Remove accents (á -> a)
+            .toLowerCase()
+            .replace(/[^a-z0-9]/g, ''); // Remove special chars
     },
 
     /**

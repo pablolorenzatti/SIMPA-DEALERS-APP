@@ -9,8 +9,9 @@
   },
   "dependencies": {
     "@hubspot/api-client": "^10.0.0",
-    "@vercel/kv": "^0.2.3",
     "@upstash/redis": "^1.30.0",
+    "@vercel/kv": "^0.2.3",
+    "axios": "^1.13.2",
     "body-parser": "^2.2.0",
     "express": "^5.1.0"
   }
