@@ -2,7 +2,7 @@ const hubspot = require('@hubspot/api-client');
 const fs = require('fs');
 const https = require('https');
 const querystring = require('querystring');
-const ConfigService = require('./services/config-service');
+const ConfigService = require('./_services/config-service');
 
 // Variables globales para caché en ejecución de serverless (container reuse)
 let razonesSocialesConfig;

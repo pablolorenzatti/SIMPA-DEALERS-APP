@@ -1,8 +1,8 @@
 const hubspot = require('@hubspot/api-client');
 const path = require('path');
 const fs = require('fs'); // Still needed for configUtils maybe
-const PropertyService = require('../src/services/PropertyService');
-const ConfigService = require('./services/config-service');
+const PropertyService = require('./_services/property-service');
+const ConfigService = require('./_services/config-service');
 
 // Cargar funciones de configuración (config.js - utilidades puras)
 let configUtils;

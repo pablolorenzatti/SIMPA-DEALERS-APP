@@ -1,9 +1,9 @@
 
 const hubspot = require('@hubspot/api-client');
-const { sendSlackErrorNotification } = require('./utils/slack-notifier');
-const ConfigService = require('./services/config-service');
-const LeadProcessor = require('./services/lead-processor');
-const AnalyticsService = require('./services/analytics-service'); // Nuevo servicio de Analytics
+const { sendSlackErrorNotification } = require('./_utils/slack-notifier');
+const ConfigService = require('./_services/config-service');
+const LeadProcessor = require('./_services/lead-processor');
+const AnalyticsService = require('./_services/analytics-service'); // Nuevo servicio de Analytics
 const path = require('path'); // Added for path.join
 
 // Fallback configuration if KV fails

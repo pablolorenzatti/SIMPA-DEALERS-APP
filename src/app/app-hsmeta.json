@@ -8,6 +8,7 @@
     "auth": {
       "type": "oauth",
       "redirectUrls": [
+        "https://simpa-workflow-action.vercel.app/api/auth",
         "http://localhost:3000"
       ],
       "requiredScopes": [
