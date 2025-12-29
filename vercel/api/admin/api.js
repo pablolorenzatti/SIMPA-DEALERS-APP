@@ -30,7 +30,21 @@ module.exports = async (req, res) => {
         // --- CONFIG (Razones/Modelos) ---
         if (action === 'config') {
             if (req.method === 'POST') {
-                const { type, data } = req.body;
+                const { type, data, razonesSociales, modelsByBrand } = req.body;
+
+                // Support both old format (type + data) and new format (direct objects)
+                if (razonesSociales !== undefined || modelsByBrand !== undefined) {
+                    // New format: save both at once
+                    if (razonesSociales !== undefined) {
+                        await ConfigService.saveRazonesSociales(razonesSociales);
+                    }
+                    if (modelsByBrand !== undefined) {
+                        await ConfigService.saveModelsByBrand(modelsByBrand);
+                    }
+                    return res.json({ success: true });
+                }
+
+                // Old format: type-based
                 if (type === 'razones') {
                     await ConfigService.saveRazonesSociales(data);
                     return res.json({ success: true });

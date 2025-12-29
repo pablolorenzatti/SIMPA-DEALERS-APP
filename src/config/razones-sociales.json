@@ -687,16 +687,6 @@
       "KTM URQUIZA"
     ]
   },
-  "MOTOMORINI SAN ISIDRO": {
-    "portalId": null,
-    "tokenEnv": "MOTOMORINI_SAN_ISIDRO_TOKEN",
-    "brands": [
-      "KTM"
-    ],
-    "dealers": [
-      "KTM URQUIZA"
-    ]
-  },
   "TEST ACCOUNT": {
     "portalId": "50104303",
     "tokenEnv": "TEST_ACCOUNT_KEY",

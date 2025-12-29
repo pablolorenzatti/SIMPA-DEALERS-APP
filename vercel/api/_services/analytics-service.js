@@ -74,9 +74,12 @@ const AnalyticsService = {
                 pipeline.hincrby(dailyKey, 'error', 1);
             }
 
-            // Incrementar contador por marca
+            // Incrementar contador por marca y razón social
             if (data.brand) {
                 pipeline.hincrby(dailyKey, `brand:${data.brand}`, 1);
+            }
+            if (data.razon) {
+                pipeline.hincrby(dailyKey, `razon:${data.razon}`, 1);
             }
 
             // Expirar la key diaria en 30 días para limpieza automática

@@ -163,27 +163,95 @@ module.exports = (req, res) => {
                                     </div>
                                 </div>
 
-                                <!-- KPI Cards -->
-                                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                                    <div class="bg-white p-6 rounded-2xl shadow-card border border-gray-100 h-32 flex flex-col justify-between">
-                                        <div class="flex items-center gap-3 text-gray-500 text-sm font-medium">
+                                <!-- GLOBAL FILTERS SECTION -->
+                                <div class="bg-white rounded-2xl shadow-card border border-gray-100 p-6 mb-6">
+                                    <div class="flex justify-between items-center mb-4">
+                                        <h3 class="text-sm font-bold text-gray-700 uppercase tracking-wider">Filtros Globales</h3>
+                                        <button v-if="hasActiveFilters()" @click="clearAllFilters" class="text-xs text-red-500 hover:text-red-700 font-medium flex items-center gap-1">
+                                            <i class="ph ph-x-circle"></i> Limpiar Filtros
+                                        </button>
+                                    </div>
+                                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-3">
+                                        <!-- Period -->
+                                        <div>
+                                            <label class="text-xs font-semibold text-gray-500 mb-1 block">Período</label>
+                                            <select v-model="selectedPeriod" @change="applyFilters" class="w-full bg-gray-50 border-gray-200 rounded-lg text-sm py-2 px-3 focus:ring-2 focus:ring-black/5">
+                                                <option value="today">Hoy</option>
+                                                <option value="yesterday">Ayer</option>
+                                                <option value="7d">Últimos 7 días</option>
+                                                <option value="30d">Últimos 30 días</option>
+                                            </select>
+                                        </div>
+                                        <!-- Razon Social -->
+                                        <div>
+                                            <label class="text-xs font-semibold text-gray-500 mb-1 block">Razón Social</label>
+                                            <select v-model="filterRazon" @change="applyFilters" class="w-full bg-gray-50 border-gray-200 rounded-lg text-sm py-2 px-3 focus:ring-2 focus:ring-black/5">
+                                                <option value="">Todas</option>
+                                                <option v-for="r in uniqueRazonesInLogs" :value="r">{{ r }}</option>
+                                            </select>
+                                        </div>
+                                        <!-- Brand -->
+                                        <div>
+                                            <label class="text-xs font-semibold text-gray-500 mb-1 block">Marca</label>
+                                            <select v-model="filterBrand" @change="applyFilters" class="w-full bg-gray-50 border-gray-200 rounded-lg text-sm py-2 px-3 focus:ring-2 focus:ring-black/5">
+                                                <option value="">Todas</option>
+                                                <option v-for="b in uniqueBrandsInLogs" :value="b">{{ b }}</option>
+                                            </select>
+                                        </div>
+                                        <!-- Model -->
+                                        <div>
+                                            <label class="text-xs font-semibold text-gray-500 mb-1 block">Modelo</label>
+                                            <select v-model="filterModel" @change="applyFilters" class="w-full bg-gray-50 border-gray-200 rounded-lg text-sm py-2 px-3 focus:ring-2 focus:ring-black/5">
+                                                <option value="">Todos</option>
+                                                <option v-for="m in catalogModelsForFilter" :value="m">{{ m }}</option>
+                                            </select>
+                                        </div>
+                                        <!-- Dealer -->
+                                        <div>
+                                            <label class="text-xs font-semibold text-gray-500 mb-1 block">Dealer</label>
+                                            <input v-model="filterDealer" @input="applyFilters" placeholder="Buscar..." class="w-full bg-gray-50 border-gray-200 rounded-lg text-sm py-2 px-3 focus:ring-2 focus:ring-black/5">
+                                        </div>
+                                        <!-- Status -->
+                                        <div>
+                                            <label class="text-xs font-semibold text-gray-500 mb-1 block">Estado</label>
+                                            <select v-model="filterStatus" @change="applyFilters" class="w-full bg-gray-50 border-gray-200 rounded-lg text-sm py-2 px-3 focus:ring-2 focus:ring-black/5">
+                                                <option value="">Todos</option>
+                                                <option value="success">Éxito</option>
+                                                <option value="error">Error</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- KPI Cards with Filter Info -->
+                                <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+                                    <div class="bg-white p-6 rounded-2xl shadow-card border border-gray-100 flex flex-col justify-between">
+                                        <div class="flex items-center gap-3 text-gray-500 text-sm font-medium mb-2">
                                             <span class="p-1.5 bg-blue-50 text-blue-600 rounded-md"><i class="ph ph-chart-bar"></i></span> Leads Procesados
                                         </div>
-                                        <div class="text-4xl font-bold text-black tracking-tight">{{ dashboardStats.summary?.stats?.total || 0 }}</div>
+                                        <div class="text-4xl font-bold text-black tracking-tight">{{ hasActiveFilters() ? filteredLogs.length : (dashboardStats.summary?.stats?.total || 0) }}</div>
+                                        <div class="text-xs text-gray-400 mt-1">{{ getPeriodLabel() }}</div>
                                     </div>
-                                    <div class="bg-white p-6 rounded-2xl shadow-card border border-gray-100 h-32 flex flex-col justify-between">
-                                        <div class="flex items-center gap-3 text-gray-500 text-sm font-medium">
+                                    <div class="bg-white p-6 rounded-2xl shadow-card border border-gray-100 flex flex-col justify-between">
+                                        <div class="flex items-center gap-3 text-gray-500 text-sm font-medium mb-2">
                                             <span class="p-1.5 bg-green-50 text-green-600 rounded-md"><i class="ph ph-check-circle"></i></span> Tasa de Éxito
                                         </div>
-                                        <div class="text-4xl font-bold text-black tracking-tight flex items-baseline gap-2">
-                                            {{ calculateSuccessRate() }}%
-                                        </div>
+                                        <div class="text-4xl font-bold text-black tracking-tight">{{ calculateSuccessRate() }}%</div>
+                                        <div class="text-xs text-gray-400 mt-1">{{ hasActiveFilters() ? filteredLogs.filter(l => l.status === 'success').length : (dashboardStats.summary?.stats?.success || 0) }} exitosos</div>
                                     </div>
-                                    <div class="bg-white p-6 rounded-2xl shadow-card border border-gray-100 h-32 flex flex-col justify-between">
-                                        <div class="flex items-center gap-3 text-gray-500 text-sm font-medium">
+                                    <div class="bg-white p-6 rounded-2xl shadow-card border border-gray-100 flex flex-col justify-between">
+                                        <div class="flex items-center gap-3 text-gray-500 text-sm font-medium mb-2">
                                             <span class="p-1.5 bg-red-50 text-red-600 rounded-md"><i class="ph ph-warning"></i></span> Errores
                                         </div>
-                                        <div class="text-4xl font-bold text-red-500 tracking-tight">{{ dashboardStats.summary?.stats?.error || 0 }}</div>
+                                        <div class="text-4xl font-bold text-red-500 tracking-tight">{{ hasActiveFilters() ? filteredLogs.filter(l => l.status === 'error').length : (dashboardStats.summary?.stats?.error || 0) }}</div>
+                                        <div class="text-xs text-gray-400 mt-1">{{ calculateSuccessRate() === 100 ? 'Sin errores' : (100 - calculateSuccessRate()) + '% tasa error' }}</div>
+                                    </div>
+                                    <div class="bg-white p-6 rounded-2xl shadow-card border border-gray-100 flex flex-col justify-between">
+                                        <div class="flex items-center gap-3 text-gray-500 text-sm font-medium mb-2">
+                                            <span class="p-1.5 bg-purple-50 text-purple-600 rounded-md"><i class="ph ph-funnel"></i></span> Logs Visibles
+                                        </div>
+                                        <div class="text-4xl font-bold text-black tracking-tight">{{ filteredLogs.length }}</div>
+                                        <div class="text-xs text-gray-400 mt-1">{{ hasActiveFilters() ? 'Filtrados' : 'Todos' }}</div>
                                     </div>
                                 </div>
 
@@ -191,25 +259,43 @@ module.exports = (req, res) => {
                                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                                     <!-- Chart: Distribution by Brand -->
                                     <div class="bg-white p-5 rounded-2xl shadow-card border border-gray-100 flex flex-col">
-                                        <h3 class="text-sm font-semibold text-gray-500 mb-4">Leads por Marca</h3>
+                                        <div class="flex justify-between items-center mb-4">
+                                            <h3 class="text-sm font-semibold text-gray-500">Leads por Marca</h3>
+                                            <span v-if="chartsLoading" class="text-xs text-gray-400"><i class="ph ph-spinner ph-spin"></i></span>
+                                        </div>
                                         <div class="flex-1 min-h-[200px] relative">
                                             <canvas id="chartBrands"></canvas>
+                                            <div v-if="!charts.brands" class="absolute inset-0 flex items-center justify-center text-gray-400 text-sm">
+                                                Cargando gráfico...
+                                            </div>
                                         </div>
                                     </div>
 
                                     <!-- Chart: Top Razones -->
                                     <div class="bg-white p-5 rounded-2xl shadow-card border border-gray-100 flex flex-col">
-                                        <h3 class="text-sm font-semibold text-gray-500 mb-4">Top Razones Sociales</h3>
+                                        <div class="flex justify-between items-center mb-4">
+                                            <h3 class="text-sm font-semibold text-gray-500">Top Razones Sociales</h3>
+                                            <span v-if="chartsLoading" class="text-xs text-gray-400"><i class="ph ph-spinner ph-spin"></i></span>
+                                        </div>
                                         <div class="flex-1 min-h-[200px] relative">
                                             <canvas id="chartRazones"></canvas>
+                                            <div v-if="!charts.razones" class="absolute inset-0 flex items-center justify-center text-gray-400 text-sm">
+                                                Cargando gráfico...
+                                            </div>
                                         </div>
                                     </div>
 
                                     <!-- Chart: Daily Trend -->
                                     <div class="bg-white p-5 rounded-2xl shadow-card border border-gray-100 flex flex-col lg:col-span-2">
-                                        <h3 class="text-sm font-semibold text-gray-500 mb-4">Tendencia Diaria</h3>
+                                        <div class="flex justify-between items-center mb-4">
+                                            <h3 class="text-sm font-semibold text-gray-500">Tendencia Diaria</h3>
+                                            <span v-if="chartsLoading" class="text-xs text-gray-400"><i class="ph ph-spinner ph-spin"></i></span>
+                                        </div>
                                         <div class="flex-1 min-h-[200px] relative">
                                             <canvas id="chartTrend"></canvas>
+                                            <div v-if="!charts.trend" class="absolute inset-0 flex items-center justify-center text-gray-400 text-sm">
+                                                Cargando gráfico...
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -233,50 +319,16 @@ module.exports = (req, res) => {
                         </div>
 
                         <!-- Logs Table -->
-                        <!-- Logs Table -->
                         <div class="bg-white rounded-3xl shadow-soft border border-gray-100 overflow-hidden">
                             <div class="p-6 border-b border-gray-50">
-                                <div class="flex justify-between items-center mb-4">
-                                    <h3 class="font-semibold text-black">Log de Actividad</h3>
+                                <div class="flex justify-between items-center">
+                                    <div>
+                                        <h3 class="font-semibold text-black">Log de Actividad</h3>
+                                        <p class="text-xs text-gray-500 mt-1">Mostrando {{ paginatedLogs.length }} de {{ filteredLogs.length }} logs</p>
+                                    </div>
                                     <button @click="fetchDashboardStats" class="text-sm text-apple-action font-medium hover:underline">Actualizar</button>
+                                </div>
                             </div>
-                            <!-- Unified Filters Bar -->
-                            <div class="flex flex-col lg:flex-row gap-3 lg:items-center">
-                                <!-- Period Group -->
-                                <div class="flex items-center justify-between lg:justify-start gap-2 lg:border-r border-gray-200 lg:pr-3 shrink-0">
-                                    <span class="text-xs font-bold text-gray-400 uppercase tracking-wider whitespace-nowrap">Período</span>
-                                    <select v-model="selectedPeriod" @change="fetchDashboardStats" class="bg-gray-100 border-transparent rounded-lg text-xs py-1.5 px-3 font-semibold text-gray-700 cursor-pointer focus:ring-0 w-32 lg:w-auto">
-                                    <option value="today">Hoy</option>
-                                    <option value="yesterday">Ayer</option>
-                                    <option value="7d">Últimos 7 días</option>
-                                    <option value="30d">Últimos 30 días</option>
-                                </select>
-                            </div>
-
-                            <!-- Main Filters Grid -->
-                            <div class="grid grid-cols-2 lg:flex lg:flex-nowrap gap-2 w-full lg:w-auto flex-1">
-                                <select v-model="filterRazon" class="bg-gray-50 border-gray-200 rounded-lg text-xs py-1.5 px-3 w-full lg:w-40 xl:w-56 truncate">
-                                    <option value="">Todas las Razones</option>
-                                    <option v-for="rs in uniqueRazonesInLogs" :value="rs">{{ rs }}</option>
-                            </select>
-                            <select v-model="filterBrand" class="bg-gray-50 border-gray-200 rounded-lg text-xs py-1.5 px-3 w-full lg:w-32 truncate">
-                                <option value="">Todas las Marcas</option>
-                                <option v-for="b in uniqueBrandsInLogs" :value="b">{{ b }}</option>
-                        </select>
-                        <select v-model="filterModel" class="bg-gray-50 border-gray-200 rounded-lg text-xs py-1.5 px-3 w-full lg:w-36 truncate">
-                            <option value="">Todos los Modelos</option>
-                            <option v-for="m in catalogModelsForFilter" :value="m">{{ m }}</option>
-                    </select>
-                    <input v-model="filterDealer" placeholder="Buscar Dealer..." class="bg-gray-50 border-gray-200 rounded-lg text-xs py-1.5 px-3 w-full lg:flex-1 min-w-[100px]">
-                        <select v-model="filterStatus" class="bg-gray-50 border-gray-200 rounded-lg text-xs py-1.5 px-3 w-full lg:w-32 col-span-2 lg:col-span-1">
-                            <option value="">Estado: Todos</option>
-                            <option value="success">Exitosos</option>
-                            <option value="error">Errores</option>
-                        </select>
-                    </div>
-                </div>
-
-            </div>
             <table class="w-full text-sm">
                 <thead class="bg-gray-50/50 text-gray-500 font-medium">
                     <tr>
@@ -288,7 +340,7 @@ module.exports = (req, res) => {
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-50">
-                    <tr v-for="log in filteredLogs" class="hover:bg-gray-50/50 transition-colors group">
+                    <tr v-for="log in paginatedLogs" class="hover:bg-gray-50/50 transition-colors group">
                         <td class="px-6 py-4 font-mono text-xs text-gray-500">{{ formatTime(log.ts) }}</td>
                         <td class="px-6 py-4 font-medium text-gray-900">{{ log.dealer }}</td>
                         <td class="px-6 py-4 text-gray-500">{{ log.brand }}</td>
@@ -302,8 +354,36 @@ module.exports = (req, res) => {
                         </button>
                     </td>
                 </tr>
+                <tr v-if="paginatedLogs.length === 0">
+                    <td colspan="5" class="px-6 py-12 text-center text-gray-400">
+                        <i class="ph ph-magnifying-glass text-4xl mb-2"></i>
+                        <p>No se encontraron logs con los filtros aplicados</p>
+                    </td>
+                </tr>
             </tbody>
         </table>
+        
+        <!-- Pagination Controls -->
+        <div v-if="totalPages > 1" class="p-4 border-t border-gray-100 flex justify-between items-center">
+            <div class="text-sm text-gray-500">
+                Página {{ currentPage }} de {{ totalPages }}
+            </div>
+            <div class="flex gap-2">
+                <button @click="prevPage" :disabled="currentPage === 1" class="px-3 py-1.5 rounded-lg text-sm font-medium transition-colors" :class="currentPage === 1 ? 'bg-gray-100 text-gray-400 cursor-not-allowed' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'">
+                    <i class="ph ph-caret-left"></i> Anterior
+                </button>
+                
+                <div class="flex gap-1">
+                    <button v-for="page in visiblePages" :key="page" @click="goToPage(page)" class="w-8 h-8 rounded-lg text-sm font-medium transition-colors" :class="page === currentPage ? 'bg-black text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'">
+                        {{ page }}
+                    </button>
+                </div>
+                
+                <button @click="nextPage" :disabled="currentPage === totalPages" class="px-3 py-1.5 rounded-lg text-sm font-medium transition-colors" :class="currentPage === totalPages ? 'bg-gray-100 text-gray-400 cursor-not-allowed' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'">
+                    Siguiente <i class="ph ph-caret-right"></i>
+                </button>
+            </div>
+        </div>
                     </div >
                 </div >
                 
@@ -349,16 +429,17 @@ module.exports = (req, res) => {
                             <h3 class="text-lg font-semibold text-gray-900">Marcas</h3>
                              <div class="flex flex-wrap gap-2 mb-4">
                                 <button v-for="brand in availableBrands" @click="toggleBrand(brand)"
-                                    :class="['px-4 py-2 rounded-full text-sm font-medium transition-all border', (selectedRazon.brands || []).includes(brand) ? 'bg-black text-white border-black' : 'bg-white border-gray-200 text-gray-500']">
+                                    :class="['px-4 py-2 rounded-full text-sm font-medium transition-all border', (selectedRazon.brands || []).some(b => b.toLowerCase() === brand.toLowerCase()) ? 'bg-black text-white border-black' : 'bg-white border-gray-200 text-gray-500']">
                                     {{ brand }}
                                 </button>
                             </div>
                             <div v-if="(selectedRazon.brands || []).length > 0" class="bg-gray-50 rounded-2xl p-6 border border-gray-100">
                                 <p class="text-sm font-semibold mb-4 text-gray-500 uppercase">Pipeline Mapping</p>
                                 <div v-for="brand in selectedRazon.brands" :key="brand" class="mb-4 last:mb-0 bg-white p-4 rounded-xl border border-gray-100 shadow-sm flex items-center gap-4">
-                                    <div class="w-32 font-bold text-sm">{{ brand }}</div>
-                                    <input :value="getPipeline(brand, 'pipeline')" @input="setPipeline(brand, 'pipeline', $event.target.value)" placeholder="Pipeline ID" class="flex-1 bg-gray-50 px-3 py-2 rounded-lg text-sm border-0">
-                                    <input :value="getPipeline(brand, 'stage')" @input="setPipeline(brand, 'stage', $event.target.value)" placeholder="Stage ID" class="flex-1 bg-gray-50 px-3 py-2 rounded-lg text-sm border-0">
+                                    <div class="w-32 font-bold text-sm break-words">{{ brand }}</div>
+                                    <input :value="getPipeline(brand, 'pipeline')" @input="setPipeline(brand, 'pipeline', $event.target.value)" placeholder="Pipeline ID" class="flex-1 bg-gray-50 px-3 py-2 rounded-lg text-sm border-0 focus:ring-2 ring-black/5">
+                                    <input :value="getPipeline(brand, 'stage')" @input="setPipeline(brand, 'stage', $event.target.value)" placeholder="Stage ID" class="flex-1 bg-gray-50 px-3 py-2 rounded-lg text-sm border-0 focus:ring-2 ring-black/5">
+                                    <button @click="removeBrandFromRazon(brand)" title="Eliminar configuración" class="text-gray-400 hover:text-red-500 hover:bg-red-50 p-2 rounded-lg transition-colors shrink-0"><i class="ph ph-trash"></i></button>
                                 </div>
                             </div >
                         </div >
@@ -648,6 +729,7 @@ module.exports = (req, res) => {
         selectedPeriod: 'today',
         includeHistory: false,
         charts: { },
+        chartsLoading: false,
 
         searchQuery: '',
         selectedRazonKey: null,
@@ -672,6 +754,10 @@ module.exports = (req, res) => {
         filterModel: '',
         filterDealer: '',
         filterStatus: '',
+        
+        // Pagination
+        currentPage: 1,
+        logsPerPage: 50,
 
         mounted() {
             this.fetchConfig();
@@ -694,6 +780,30 @@ module.exports = (req, res) => {
         // Analytics Helpers
         get filteredLogs() {
             let logs = this.dashboardStats.recentLogs || [];
+
+            // Date Filtering
+            if (this.selectedPeriod === 'today' || this.selectedPeriod === 'yesterday') {
+                try {
+                    const fmt = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Argentina/Buenos_Aires' });
+                    const todayStr = fmt.format(new Date());
+                    
+                    let targetDateStr = todayStr;
+                    if (this.selectedPeriod === 'yesterday') {
+                        // Safe date subtraction
+                        const d = new Date(todayStr + "T12:00:00"); // Noon to avoid boundary issues
+                        d.setDate(d.getDate() - 1);
+                        targetDateStr = fmt.format(d);
+                    }
+
+                    logs = logs.filter(l => {
+                        if (!l.ts) return false;
+                        return fmt.format(new Date(l.ts)) === targetDateStr;
+                    });
+                } catch(e) { console.error('Date filter error', e); }
+            }
+            // For 7d/30d we show all loaded logs (assuming backend handled the broad retrieval)
+
+
                     if (this.filterRazon) logs = logs.filter(l => l.razon === this.filterRazon);
                     if (this.filterBrand) logs = logs.filter(l => l.brand === this.filterBrand);
                     if (this.filterModel) logs = logs.filter(l => l.details?.inputFields?.contact_model === this.filterModel);
@@ -738,6 +848,32 @@ module.exports = (req, res) => {
                         .sort((a, b) => b.count - a.count)
         .slice(0, 5);
                 },
+        
+        get paginatedLogs() {
+            const start = (this.currentPage - 1) * this.logsPerPage;
+            const end = start + this.logsPerPage;
+            return this.filteredLogs.slice(start, end);
+        },
+        
+        get totalPages() {
+            return Math.ceil(this.filteredLogs.length / this.logsPerPage);
+        },
+        
+        get visiblePages() {
+            const total = this.totalPages;
+            const current = this.currentPage;
+            const delta = 2; // Show 2 pages before and after current
+            const range = [];
+            const rangeWithDots = [];
+            
+            for (let i = 1; i <= total; i++) {
+                if (i === 1 || i === total || (i >= current - delta && i <= current + delta)) {
+                    range.push(i);
+                }
+            }
+            
+            return range;
+        },
 
         async fetchConfig() {
                     try {
@@ -952,83 +1088,270 @@ module.exports = (req, res) => {
                     }
                 },
 
-        renderCharts() {
-                    if (typeof Chart === 'undefined') return;
+        // Helper Functions
+        getPeriodLabel() {
+            const labels = {
+                'today': 'Hoy',
+                'yesterday': 'Ayer',
+                '7d': 'Últimos 7 días',
+                '30d': 'Últimos 30 días'
+            };
+            return labels[this.selectedPeriod] || this.selectedPeriod;
+        },
 
-        const ctxBrands = document.getElementById('chartBrands');
-        const ctxRazones = document.getElementById('chartRazones');
-        const ctxTrend = document.getElementById('chartTrend');
+        hasActiveFilters() {
+            return !!(this.filterRazon || this.filterBrand || this.filterModel || this.filterDealer || this.filterStatus);
+        },
 
-        // --- Helpers for aggregation ---
-        const logs = this.filteredLogs || [];
+        clearAllFilters() {
+            this.filterRazon = '';
+            this.filterBrand = '';
+            this.filterModel = '';
+            this.filterDealer = '';
+            this.filterStatus = '';
+            this.currentPage = 1;
+            this.applyFilters();
+        },
 
-        // 1. Brands Distribution
-        const brandCounts = { };
+        applyFilters() {
+            this.currentPage = 1; // Reset to first page when filters change
+            this.fetchDashboardStats();
+        },
+
+        nextPage() {
+            if (this.currentPage < this.totalPages) {
+                this.currentPage++;
+            }
+        },
+
+        prevPage() {
+            if (this.currentPage > 1) {
+                this.currentPage--;
+            }
+        },
+
+        goToPage(page) {
+            if (page >= 1 && page <= this.totalPages) {
+                this.currentPage = page;
+            }
+        },
+
+        async renderCharts() {
+            this.chartsLoading = true;
+            
+            // Wait for Chart.js to be available
+            let retries = 0;
+            while (typeof Chart === 'undefined' && retries < 10) {
+                await new Promise(resolve => setTimeout(resolve, 100));
+                retries++;
+            }
+            
+            if (typeof Chart === 'undefined') {
+                console.error('[Charts] Chart.js no está disponible después de esperar');
+                this.chartsLoading = false;
+                return;
+            }
+
+            try {
+                // Wait for DOM elements to be ready
+                await this.$nextTick();
+                await new Promise(resolve => setTimeout(resolve, 50));
+
+                const ctxBrands = document.getElementById('chartBrands')?.getContext('2d');
+                const ctxRazones = document.getElementById('chartRazones')?.getContext('2d');
+                const ctxTrend = document.getElementById('chartTrend')?.getContext('2d');
+
+                if (!ctxBrands || !ctxRazones || !ctxTrend) {
+                    console.warn('[Charts] Elementos canvas no encontrados, reintentando...');
+                    setTimeout(() => this.renderCharts(), 200);
+                    return;
+                }
+
+                const logs = this.filteredLogs || [];
+                const history = this.dashboardStats.history || [];
+
+                // 1. Brand Distribution
+                const brandCounts = {};
+                let sourceForBrands = 'logs';
+                
+                if (history.length > 0 && !this.filterBrand && !this.filterRazon && !this.filterModel && !this.filterDealer && !this.filterStatus) {
+                    sourceForBrands = 'history';
+                    history.forEach(day => {
+                        const data = day.data || {};
+                        Object.keys(data).forEach(k => {
+                            if (k.startsWith('brand:')) {
+                                const brand = k.replace('brand:', '');
+                                brandCounts[brand] = (brandCounts[brand] || 0) + parseInt(data[k] || 0);
+                            }
+                        });
+                    });
+                } else {
                     logs.forEach(l => { 
                         const b = l.brand || 'N/A';
-        brandCounts[b] = (brandCounts[b] || 0) + 1; 
+                        brandCounts[b] = (brandCounts[b] || 0) + 1; 
                     });
-        const brandsLabels = Object.keys(brandCounts);
-        const brandsData = Object.values(brandCounts);
+                }
 
-        // 2. Razones Social Distribution
-        const razonCounts = { };
-                    logs.forEach(l => {
+                const brandsLabels = Object.keys(brandCounts);
+                const brandsData = Object.values(brandCounts);
+
+                // 2. Razones Social Distribution
+                const razonCounts = {};
+                const hasRazonHistory = history.some(d => d.data && Object.keys(d.data).some(k => k.startsWith('razon:')));
+                
+                if (hasRazonHistory && !this.filterBrand && !this.filterRazon && !this.filterModel && !this.filterDealer && !this.filterStatus) {
+                     history.forEach(day => {
+                        const data = day.data || {};
+                        Object.keys(data).forEach(k => {
+                            if (k.startsWith('razon:')) {
+                                const razon = k.replace('razon:', '');
+                                razonCounts[razon] = (razonCounts[razon] || 0) + parseInt(data[k] || 0);
+                            }
+                        });
+                    });
+                } else {
+                     logs.forEach(l => {
                         const r = l.razon || 'N/A';
-        razonCounts[r] = (razonCounts[r] || 0) + 1;
+                        razonCounts[r] = (razonCounts[r] || 0) + 1;
                     });
-                     // Sort top 5
-                    const sortedRazones = Object.entries(razonCounts).sort((a,b) => b[1] - a[1]).slice(0, 5);
-                    const razonLabels = sortedRazones.map(i => i[0]);
-                    const razonData = sortedRazones.map(i => i[1]);
+                }
 
-        // 3. Trend Data
-        const history = this.dashboardStats.history || [];
-                    // Ensure chronological
-                    // history is usually [{date: 'YYYY-MM-DD', data: {...}}]
-                    const trendLabels = history.map(h => h.date ? h.date.split('T')[0].slice(5) : '-'); // MM-DD
-                    const trendTotal = history.map(h => parseInt(h.data.total||0));
-                    const trendError = history.map(h => parseInt(h.data.error||0));
+                const sortedRazones = Object.entries(razonCounts).sort((a,b) => b[1] - a[1]).slice(0, 5);
+                const razonLabels = sortedRazones.map(i => i[0]);
+                const razonData = sortedRazones.map(i => i[1]);
 
-                    // --- Chart Creation/Update ---
-                    const createOrUpdate = (ctx, id, type, data, options) => {
-                         if(!ctx) return;
-        if(this.charts[id]) {
-            this.charts[id].destroy();
-                         }
-        this.charts[id] = new Chart(ctx, {type, data, options});
-                    };
+                // 3. Trend Data
+                const trendLabels = history.map(h => h.date ? h.date.substring(5) : '-');
+                const trendTotal = history.map(h => parseInt(h.data?.total||0));
+                const trendError = history.map(h => parseInt(h.data?.error||0));
 
-        // Brands Doughnut
-        createOrUpdate(ctxBrands, 'brands', 'doughnut', {
-            labels: brandsLabels,
-        datasets: [{
-            data: brandsData,
-        backgroundColor: ['#000000', '#FF3B30', '#34C759', '#007AFF', '#FF9500', '#AF52DE', '#5856D6'],
-        borderWidth: 0
-                        }]
-                    }, {responsive: true, maintainAspectRatio: false, plugins: {legend: {position: 'bottom', labels: {boxWidth: 10, font: {size: 10} } } } });
+                // Chart Creation/Update
+                const createOrUpdate = (ctx, id, type, data, options) => {
+                     if(!ctx) return;
+                    if(this.charts[id]) {
+                        try {
+                            this.charts[id].destroy();
+                        } catch(e) {
+                            console.warn('[Charts] Error destroying chart:', id, e);
+                        }
+                     }
+                    try {
+                        this.charts[id] = new Chart(ctx, {type, data, options});
+                    } catch(e) {
+                        console.error('[Charts] Error creating chart:', id, e);
+                    }
+                };
 
-        // Razones Bar
-        createOrUpdate(ctxRazones, 'razones', 'bar', {
-            labels: razonLabels,
-        datasets: [{
-            label: 'Leads',
-        data: razonData,
-        backgroundColor: '#000000',
-        borderRadius: 6
-                        }]
-                    }, {responsive: true, maintainAspectRatio: false, scales: {y: {beginAtZero: true, grid: {display: false } }, x: {grid: {display: false }, ticks: {font: {size: 10} } } }, plugins: {legend: {display: false } } });
+                // Brands Doughnut
+                createOrUpdate(ctxBrands, 'brands', 'doughnut', {
+                    labels: brandsLabels,
+                    datasets: [{
+                        data: brandsData,
+                        backgroundColor: ['#ff7a59', '#536d7a', '#7fd1de', '#F2545B', '#2D3E50', '#A4C639', '#FFD700'],
+                        borderWidth: 0
+                    }]
+                }, {
+                    responsive: true, 
+                    maintainAspectRatio: false, 
+                    plugins: {
+                        legend: {position: 'bottom', labels: {boxWidth: 10, font: {size: 10} } } 
+                    } 
+                });
 
-        // Trend Line
-        createOrUpdate(ctxTrend, 'trend', 'line', {
-            labels: trendLabels,
-        datasets: [
-        {label: 'Total', data: trendTotal, borderColor: '#000000', backgroundColor: 'rgba(0,0,0,0.05)', fill: true, tension: 0.3, pointRadius: 3 },
-        {label: 'Errores', data: trendError, borderColor: '#FF3B30', backgroundColor: 'transparent', borderDash: [5, 5], tension: 0.3, pointRadius: 0 }
-        ]
-                    }, {responsive: true, maintainAspectRatio: false, scales: {y: {beginAtZero: true, grid: {color: '#f3f4f6' } }, x: {grid: {display: false } } }, plugins: {legend: {position: 'top', align: 'end', labels: {boxWidth: 10, usePointStyle: true } } } });
-                },
+                // Razones Bar
+                const reasonColors = ['#ff7a59', '#2D3E50', '#536d7a', '#7fd1de', '#F2545B'];
+                
+                createOrUpdate(ctxRazones, 'razones', 'bar', {
+                    labels: razonLabels,
+                    datasets: [{
+                        label: 'Leads',
+                        data: razonData,
+                        backgroundColor: reasonColors.slice(0, razonData.length),
+                        borderRadius: 4,
+                        barThickness: 20
+                    }]
+                }, {
+                    indexAxis: 'y',
+                    responsive: true, 
+                    maintainAspectRatio: false, 
+                    scales: {
+                        x: {beginAtZero: true, grid: {display: false, drawBorder: false }, ticks: {font: {size: 10} } }, 
+                        y: {grid: {display: false, drawBorder: false }, ticks: {font: {size: 11, weight: '500'} } } 
+                    }, 
+                    plugins: {legend: {display: false } } 
+                });
+
+                // Trend Line
+                createOrUpdate(ctxTrend, 'trend', 'line', {
+                    labels: trendLabels,
+                    datasets: [
+                        {
+                            label: 'Total',
+                            data: trendTotal,
+                            borderColor: '#ff7a59',
+                            backgroundColor: (context) => {
+                                const ctx = context.chart.ctx;
+                                const gradient = ctx.createLinearGradient(0, 0, 0, 200);
+                                gradient.addColorStop(0, 'rgba(255, 122, 89, 0.2)');
+                                gradient.addColorStop(1, 'rgba(255, 122, 89, 0)');
+                                return gradient;
+                            },
+                            fill: true,
+                            tension: 0.4,
+                            pointRadius: 4,
+                            pointHoverRadius: 6,
+                            pointBackgroundColor: '#fff',
+                            pointBorderColor: '#ff7a59',
+                            pointBorderWidth: 2
+                        },
+                        {
+                            label: 'Errores',
+                            data: trendError,
+                            borderColor: '#F2545B',
+                            backgroundColor: 'transparent',
+                            fill: false,
+                            tension: 0.4,
+                            pointRadius: 3,
+                            pointHoverRadius: 5,
+                            pointBackgroundColor: '#fff',
+                            pointBorderColor: '#F2545B',
+                            pointBorderWidth: 2
+                        }
+                    ]
+                }, {
+                    responsive: true, 
+                    maintainAspectRatio: false, 
+                    scales: {
+                        y: {
+                            beginAtZero: true, 
+                            grid: {color: '#f3f4f6', borderDash: [2, 2], drawBorder: false },
+                            ticks: { padding: 10 }
+                        }, 
+                        x: {
+                            grid: {display: false, drawBorder: false },
+                            ticks: { padding: 10 }
+                        } 
+                    }, 
+                    plugins: {
+                        legend: {position: 'top', align: 'end', labels: {boxWidth: 8, usePointStyle: true, font: {size: 11} } },
+                        tooltip: {
+                            backgroundColor: '#1f2937',
+                            padding: 10,
+                            cornerRadius: 8,
+                            titleFont: {size: 13},
+                            bodyFont: {size: 12},
+                            displayColors: true
+                        }
+                    } 
+                });
+
+                this.chartsLoading = false;
+                console.log('[Charts] Gráficos renderizados exitosamente');
+            } catch(error) {
+                console.error('[Charts] Error rendering charts:', error);
+                this.chartsLoading = false;
+            }
+        },
 
         formatTime(ts) {
                     if(!ts) return '-';
@@ -1042,11 +1365,20 @@ module.exports = (req, res) => {
                 },
 
         calculateSuccessRate() {
-                    const total = this.dashboardStats.summary?.stats?.total || 0;
-        const error = this.dashboardStats.summary?.stats?.error || 0;
-        if(total === 0) return 0;
-        return Math.round(((total - error) / total) * 100);
-                },
+            // Use filtered logs if filters are active
+            if (this.hasActiveFilters()) {
+                const total = this.filteredLogs.length;
+                if (total === 0) return 0;
+                const errors = this.filteredLogs.filter(l => l.status === 'error').length;
+                return Math.round(((total - errors) / total) * 100);
+            }
+            
+            // Otherwise use dashboard stats
+            const total = this.dashboardStats.summary?.stats?.total || 0;
+            const error = this.dashboardStats.summary?.stats?.error || 0;
+            if(total === 0) return 0;
+            return Math.round(((total - error) / total) * 100);
+        },
 
         openLogDetails(log) {
             this.selectedLog = log;
@@ -1077,17 +1409,37 @@ module.exports = (req, res) => {
         toggleBrand(brand) {
                     if(!this.selectedRazon) return;
         if(!this.selectedRazon.brands) this.selectedRazon.brands = [];
-        const idx = this.selectedRazon.brands.indexOf(brand);
+        
+        // Case-insensitive check
+        const idx = this.selectedRazon.brands.findIndex(b => b.toLowerCase() === brand.toLowerCase());
+        
                     if(idx > -1) {
+            // Remove existing (using the actual key found)
+            const brandToRemove = this.selectedRazon.brands[idx];
             this.selectedRazon.brands.splice(idx, 1);
-        if(this.selectedRazon.pipelineMapping) delete this.selectedRazon.pipelineMapping[brand];
+        if(this.selectedRazon.pipelineMapping) delete this.selectedRazon.pipelineMapping[brandToRemove];
                     } else {
+            // Add new (use the casing from availableBrand for consistency)
             this.selectedRazon.brands.push(brand);
         if(!this.selectedRazon.pipelineMapping) this.selectedRazon.pipelineMapping = { };
         this.selectedRazon.pipelineMapping[brand] = {pipeline: '', stage: '' };
                     }
         this.markDirty();
                 },
+        removeBrandFromRazon(brand) {
+            if(!confirm('¿Eliminar la configuración para la marca "' + brand + '"?')) return;
+            if(!this.selectedRazon) return;
+            if(!this.selectedRazon.brands) return;
+            
+            const idx = this.selectedRazon.brands.indexOf(brand);
+            if(idx > -1) {
+                this.selectedRazon.brands.splice(idx, 1);
+                if(this.selectedRazon.pipelineMapping && this.selectedRazon.pipelineMapping[brand]) {
+                    delete this.selectedRazon.pipelineMapping[brand];
+                }
+                this.markDirty();
+            }
+        },
         getPipeline(brand, field) { return this.selectedRazon.pipelineMapping?.[brand]?.[field] || ''; },
         setPipeline(brand, field, value) {
                      if(!this.selectedRazon.pipelineMapping) this.selectedRazon.pipelineMapping = { };
@@ -1131,20 +1483,46 @@ module.exports = (req, res) => {
                 },
         markDirty() {this.unsavedChanges = true; },
         async saveAll() {
-                    if(this.isNewRazon && this.pendingNewKey) {
-                        const newKey = this.pendingNewKey.toUpperCase().trim();
-        this.razonesSociales[newKey] = JSON.parse(JSON.stringify(this.razonesSociales['NEW']));
-        delete this.razonesSociales['NEW'];
-        this.selectedRazonKey = newKey;
-        this.isNewRazon = false;
-                    }
-        this.saving = true;
-        try {
-            await fetch('/api/admin/config', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ razonesSociales: this.razonesSociales, modelsByBrand: this.modelsByBrand }) });
-        this.unsavedChanges = false;
-                        setTimeout(() => this.saving = false, 500);
-                    } catch(e) {alert('Error: ' + e.message); this.saving = false; }
-                },
+            if(this.isNewRazon && this.pendingNewKey) {
+                const newKey = this.pendingNewKey.toUpperCase().trim();
+                this.razonesSociales[newKey] = JSON.parse(JSON.stringify(this.razonesSociales['NEW']));
+                delete this.razonesSociales['NEW'];
+                this.selectedRazonKey = newKey;
+                this.isNewRazon = false;
+            }
+            this.saving = true;
+            try {
+                console.log('[Admin] Guardando configuración...', {
+                    razonesSocialesCount: Object.keys(this.razonesSociales).length,
+                    modelsByBrandCount: Object.keys(this.modelsByBrand).length
+                });
+                
+                const response = await fetch('/api/admin/api?action=config', { 
+                    method: 'POST', 
+                    headers: { 'Content-Type': 'application/json' }, 
+                    body: JSON.stringify({ 
+                        razonesSociales: this.razonesSociales, 
+                        modelsByBrand: this.modelsByBrand 
+                    }) 
+                });
+                
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    throw new Error('Error del servidor: ' + response.status + ' - ' + errorText);
+                }
+                
+                const result = await response.json();
+                console.log('[Admin] Guardado exitoso:', result);
+                
+                this.unsavedChanges = false;
+                setTimeout(() => this.saving = false, 500);
+                alert('Configuración guardada exitosamente');
+            } catch(e) {
+                console.error('[Admin] Error guardando:', e);
+                alert('Error: ' + e.message); 
+                this.saving = false; 
+            }
+        },
         async runSimulation() {
                      try {
                         const res = await fetch('/api/admin/simulate', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({dealerName: this.simDealer, brandName: this.simBrand }) });
