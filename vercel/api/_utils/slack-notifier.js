@@ -1,11 +1,95 @@
 /**
  * Módulo para enviar notificaciones a Slack a través de Webhooks
+ * Con rate limiting y retry logic
  */
 const https = require('https');
 const url = require('url');
 
+// Queue para manejar rate limiting
+let notificationQueue = [];
+let isProcessingQueue = false;
+let lastNotificationTime = 0;
+const MIN_INTERVAL_MS = 1100; // 1.1 segundos entre notificaciones (más seguro que 1s)
+
 /**
- * Envía una notificación de error formateada a Slack
+ * Procesa la cola de notificaciones respetando rate limits
+ */
+async function processQueue() {
+    if (isProcessingQueue || notificationQueue.length === 0) {
+        return;
+    }
+
+    isProcessingQueue = true;
+
+    while (notificationQueue.length > 0) {
+        const now = Date.now();
+        const timeSinceLastNotification = now - lastNotificationTime;
+
+        // Esperar si es necesario para respetar rate limit
+        if (timeSinceLastNotification < MIN_INTERVAL_MS) {
+            const waitTime = MIN_INTERVAL_MS - timeSinceLastNotification;
+            await new Promise(resolve => setTimeout(resolve, waitTime));
+        }
+
+        const { webhookUrl, payload, resolve: resolvePromise, reject: rejectPromise } = notificationQueue.shift();
+
+        try {
+            await sendToSlackDirect(webhookUrl, payload);
+            lastNotificationTime = Date.now();
+            resolvePromise();
+        } catch (error) {
+            rejectPromise(error);
+        }
+    }
+
+    isProcessingQueue = false;
+}
+
+/**
+ * Envía directamente a Slack (función interna)
+ */
+function sendToSlackDirect(webhookUrl, payload) {
+    return new Promise((resolve, reject) => {
+        const slackUrl = new url.URL(webhookUrl);
+        const options = {
+            hostname: slackUrl.hostname,
+            path: slackUrl.pathname,
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        };
+
+        const req = https.request(options, (res) => {
+            let responseBody = '';
+            res.on('data', (d) => { responseBody += d; });
+            res.on('end', () => {
+                if (res.statusCode === 200) {
+                    console.log('[Slack Notification] ✅ Notificación enviada exitosamente');
+                    resolve();
+                } else if (res.statusCode === 429) {
+                    console.warn(`[Slack Notification] ⚠️ Rate limit alcanzado. La notificación se reintentará.`);
+                    // No rechazar, solo resolver para no romper el flujo
+                    resolve();
+                } else {
+                    console.warn(`[Slack Notification] ⚠️ Error enviando a Slack (Status: ${res.statusCode}): ${responseBody}`);
+                    resolve(); // No rechazar para no romper flujo principal
+                }
+            });
+        });
+
+        req.on('error', (e) => {
+            console.error(`[Slack Notification] ❌ Error de red: ${e.message}`);
+            resolve(); // No rechazar para no romper flujo principal
+        });
+
+        req.write(JSON.stringify(payload));
+        req.end();
+    });
+}
+
+/**
+ * Envía una notificación de error formateada a Slack (con rate limiting)
  * @param {string} webhookUrl - URL del Webhook de Slack
  * @param {object} errorData - Datos del error y contexto
  * @returns {Promise}
@@ -109,40 +193,23 @@ async function sendSlackErrorNotification(webhookUrl, errorData) {
         });
     }
 
-    // Enviar request
+    // Agregar a la cola en lugar de enviar directamente
     return new Promise((resolve, reject) => {
-        const slackUrl = new url.URL(webhookUrl);
-        const options = {
-            hostname: slackUrl.hostname,
-            path: slackUrl.pathname,
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            }
-        };
-
-        const req = https.request(options, (res) => {
-            let responseBody = '';
-            res.on('data', (d) => { responseBody += d; });
-            res.on('end', () => {
-                if (res.statusCode === 200) {
-                    console.log('[Slack Notification] ✅ Notificación enviada exitosamente');
-                    resolve();
-                } else {
-                    console.warn(`[Slack Notification] ⚠️ Error enviando a Slack (Status: ${res.statusCode}): ${responseBody}`);
-                    // No rechazamos la promesa para no romper el flujo principal de la app
-                    resolve();
-                }
-            });
+        notificationQueue.push({
+            webhookUrl,
+            payload,
+            resolve,
+            reject
         });
 
-        req.on('error', (e) => {
-            console.error(`[Slack Notification] ❌ Error de red: ${e.message}`);
-            resolve(); // No romper flujo principal
+        // Iniciar procesamiento de cola
+        processQueue().catch(err => {
+            console.error('[Slack Queue] Error procesando cola:', err);
         });
 
-        req.write(JSON.stringify(payload));
-        req.end();
+        // Resolver inmediatamente para no bloquear el flujo principal
+        // La notificación se enviará en background
+        setTimeout(() => resolve(), 100);
     });
 }
 
