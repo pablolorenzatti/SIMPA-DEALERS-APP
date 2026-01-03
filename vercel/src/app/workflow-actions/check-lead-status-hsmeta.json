@@ -1,0 +1,324 @@
+{
+  "uid": "workflow-action-check-lead-status",
+  "type": "workflow-action",
+  "config": {
+    "actionUrl": "https://simpa-workflow-action-e6uzq0cbb-pablo-lorenzattis-projects.vercel.app/api/check-lead-status?x-vercel-protection-bypass=e4f3b1c6a9d8e7f0123456789abcdef0",
+    "labels": {
+      "en": {
+        "actionName": "Check Lead Status",
+        "actionDescription": "Checks the status of a lead sent to a dealer. Retrieves deal stage, activities (meetings, calls, notes, emails, tasks), and contact information from the dealer's HubSpot account.",
+        "appDisplayName": "SIMPA-Application",
+        "actionCardContent": "Check status of lead {{dealer_deal_id}} for {{razon_social}}",
+        "inputFieldLabels": {
+          "razon_social": "Legal Entity",
+          "dealer_contact_id": "Dealer Contact ID",
+          "dealer_deal_id": "Dealer Deal ID",
+          "origin_deal_id": "Original Deal ID (SIMPA)"
+        },
+        "inputFieldDescriptions": {
+          "razon_social": "Legal entity (razón social) that owns the dealer account where the lead was sent. Must match a configured token in razones-sociales.json.",
+          "dealer_contact_id": "Contact ID in the dealer's HubSpot account. Optional but recommended to get full contact information.",
+          "dealer_deal_id": "Deal ID in the dealer's HubSpot account. Required to check the deal status and activities.",
+          "origin_deal_id": "Original Deal ID from SIMPA account. Optional. If dealer_deal_id is not found, this will be used to search for the deal by id_negocio_simpa property."
+        },
+        "outputFieldLabels": {
+          "success": "Success",
+          "message": "Message",
+          "razonSocial": "Legal Entity",
+          "dealInfo": "Deal Information (JSON)",
+          "dealName": "Deal Name",
+          "dealStage": "Deal Stage ID",
+          "dealStageLabel": "Deal Stage Label",
+          "dealStageProbability": "Deal Stage Probability",
+          "dealAmount": "Deal Amount",
+          "dealCloseDate": "Deal Close Date",
+          "dealPipeline": "Deal Pipeline ID",
+          "dealMarca": "Deal Brand",
+          "dealModelo": "Deal Model",
+          "contactInfo": "Contact Information (JSON)",
+          "contactFirstName": "Contact First Name",
+          "contactLastName": "Contact Last Name",
+          "contactEmail": "Contact Email",
+          "contactPhone": "Contact Phone",
+          "activitiesTotal": "Total Activities",
+          "activitiesMeetings": "Meetings Count",
+          "activitiesCalls": "Calls Count",
+          "activitiesNotes": "Notes Count",
+          "activitiesEmails": "Emails Count",
+          "activitiesTasks": "Tasks Count",
+          "activitiesDetails": "Activities Details (JSON)"
+        }
+      },
+      "es": {
+        "actionName": "Verificar Estado del Lead",
+        "actionDescription": "Verifica el estado de un lead enviado a un concesionario. Obtiene la etapa del negocio, actividades (reuniones, llamadas, notas, emails, tareas) e información del contacto desde la cuenta HubSpot del concesionario.",
+        "appDisplayName": "SIMPA-Application",
+        "actionCardContent": "Verificar estado del lead {{dealer_deal_id}} para {{razon_social}}",
+        "inputFieldLabels": {
+          "razon_social": "Razón Social",
+          "dealer_contact_id": "ID Contacto en Dealer",
+          "dealer_deal_id": "ID Negocio en Dealer",
+          "origin_deal_id": "ID Negocio Origen (SIMPA)"
+        },
+        "inputFieldDescriptions": {
+          "razon_social": "Razón social que posee la cuenta del concesionario donde se envió el lead. Debe coincidir con un token configurado en razones-sociales.json.",
+          "dealer_contact_id": "ID del contacto en la cuenta HubSpot del concesionario. Opcional pero recomendado para obtener información completa del contacto.",
+          "dealer_deal_id": "ID del negocio en la cuenta HubSpot del concesionario. Requerido para verificar el estado del negocio y sus actividades.",
+          "origin_deal_id": "ID del negocio original en la cuenta SIMPA. Opcional. Si dealer_deal_id no se encuentra, se usará este valor para buscar el negocio por la propiedad id_negocio_simpa."
+        },
+        "outputFieldLabels": {
+          "success": "Éxito",
+          "message": "Mensaje",
+          "razonSocial": "Razón Social",
+          "dealInfo": "Información del Negocio (JSON)",
+          "dealName": "Nombre del Negocio",
+          "dealStage": "ID Etapa del Negocio",
+          "dealStageLabel": "Etiqueta de la Etapa",
+          "dealStageProbability": "Probabilidad de la Etapa",
+          "dealAmount": "Monto del Negocio",
+          "dealCloseDate": "Fecha de Cierre",
+          "dealPipeline": "ID del Pipeline",
+          "dealMarca": "Marca del Negocio",
+          "dealModelo": "Modelo del Negocio",
+          "contactInfo": "Información del Contacto (JSON)",
+          "contactFirstName": "Nombre del Contacto",
+          "contactLastName": "Apellido del Contacto",
+          "contactEmail": "Email del Contacto",
+          "contactPhone": "Teléfono del Contacto",
+          "activitiesTotal": "Total de Actividades",
+          "activitiesMeetings": "Cantidad de Reuniones",
+          "activitiesCalls": "Cantidad de Llamadas",
+          "activitiesNotes": "Cantidad de Notas",
+          "activitiesEmails": "Cantidad de Emails",
+          "activitiesTasks": "Cantidad de Tareas",
+          "activitiesDetails": "Detalle de Actividades (JSON)"
+        }
+      }
+    },
+    "objectTypes": [
+      "CONTACT",
+      "DEAL"
+    ],
+    "supportedClients": [
+      {
+        "client": "WORKFLOWS"
+      }
+    ],
+    "inputFields": [
+      {
+        "typeDefinition": {
+          "name": "razon_social",
+          "type": "string",
+          "fieldType": "text"
+        },
+        "supportedValueTypes": ["STATIC_VALUE"],
+        "isRequired": true
+      },
+      {
+        "typeDefinition": {
+          "name": "dealer_contact_id",
+          "type": "string",
+          "fieldType": "text"
+        },
+        "supportedValueTypes": ["STATIC_VALUE"],
+        "isRequired": false
+      },
+      {
+        "typeDefinition": {
+          "name": "dealer_deal_id",
+          "type": "string",
+          "fieldType": "text"
+        },
+        "supportedValueTypes": ["STATIC_VALUE"],
+        "isRequired": true
+      },
+      {
+        "typeDefinition": {
+          "name": "origin_deal_id",
+          "type": "string",
+          "fieldType": "text"
+        },
+        "supportedValueTypes": ["STATIC_VALUE"],
+        "isRequired": false
+      }
+    ],
+    "outputFields": [
+      {
+        "typeDefinition": {
+          "name": "success",
+          "type": "string",
+          "fieldType": "text"
+        }
+      },
+      {
+        "typeDefinition": {
+          "name": "message",
+          "type": "string",
+          "fieldType": "text"
+        }
+      },
+      {
+        "typeDefinition": {
+          "name": "razonSocial",
+          "type": "string",
+          "fieldType": "text"
+        }
+      },
+      {
+        "typeDefinition": {
+          "name": "dealInfo",
+          "type": "string",
+          "fieldType": "textarea"
+        }
+      },
+      {
+        "typeDefinition": {
+          "name": "dealName",
+          "type": "string",
+          "fieldType": "text"
+        }
+      },
+      {
+        "typeDefinition": {
+          "name": "dealStage",
+          "type": "string",
+          "fieldType": "text"
+        }
+      },
+      {
+        "typeDefinition": {
+          "name": "dealStageLabel",
+          "type": "string",
+          "fieldType": "text"
+        }
+      },
+      {
+        "typeDefinition": {
+          "name": "dealStageProbability",
+          "type": "string",
+          "fieldType": "number"
+        }
+      },
+      {
+        "typeDefinition": {
+          "name": "dealAmount",
+          "type": "string",
+          "fieldType": "number"
+        }
+      },
+      {
+        "typeDefinition": {
+          "name": "dealCloseDate",
+          "type": "string",
+          "fieldType": "text"
+        }
+      },
+      {
+        "typeDefinition": {
+          "name": "dealPipeline",
+          "type": "string",
+          "fieldType": "text"
+        }
+      },
+      {
+        "typeDefinition": {
+          "name": "dealMarca",
+          "type": "string",
+          "fieldType": "text"
+        }
+      },
+      {
+        "typeDefinition": {
+          "name": "dealModelo",
+          "type": "string",
+          "fieldType": "text"
+        }
+      },
+      {
+        "typeDefinition": {
+          "name": "contactInfo",
+          "type": "string",
+          "fieldType": "textarea"
+        }
+      },
+      {
+        "typeDefinition": {
+          "name": "contactFirstName",
+          "type": "string",
+          "fieldType": "text"
+        }
+      },
+      {
+        "typeDefinition": {
+          "name": "contactLastName",
+          "type": "string",
+          "fieldType": "text"
+        }
+      },
+      {
+        "typeDefinition": {
+          "name": "contactEmail",
+          "type": "string",
+          "fieldType": "text"
+        }
+      },
+      {
+        "typeDefinition": {
+          "name": "contactPhone",
+          "type": "string",
+          "fieldType": "text"
+        }
+      },
+      {
+        "typeDefinition": {
+          "name": "activitiesTotal",
+          "type": "number",
+          "fieldType": "number"
+        }
+      },
+      {
+        "typeDefinition": {
+          "name": "activitiesMeetings",
+          "type": "number",
+          "fieldType": "number"
+        }
+      },
+      {
+        "typeDefinition": {
+          "name": "activitiesCalls",
+          "type": "number",
+          "fieldType": "number"
+        }
+      },
+      {
+        "typeDefinition": {
+          "name": "activitiesNotes",
+          "type": "number",
+          "fieldType": "number"
+        }
+      },
+      {
+        "typeDefinition": {
+          "name": "activitiesEmails",
+          "type": "number",
+          "fieldType": "number"
+        }
+      },
+      {
+        "typeDefinition": {
+          "name": "activitiesTasks",
+          "type": "number",
+          "fieldType": "number"
+        }
+      },
+      {
+        "typeDefinition": {
+          "name": "activitiesDetails",
+          "type": "string",
+          "fieldType": "textarea"
+        }
+      }
+    ]
+  }
+}
+

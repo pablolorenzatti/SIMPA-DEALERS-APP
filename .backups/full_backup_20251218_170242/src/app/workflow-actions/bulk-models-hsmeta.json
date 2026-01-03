@@ -1,0 +1,166 @@
+{
+  "uid": "workflow-action-bulk-models",
+  "type": "workflow-action",
+  "config": {
+    "actionUrl": "https://simpa-workflow-action.vercel.app/api/bulk-models?x-vercel-protection-bypass=e4f3b1c6a9d8e7f0123456789abcdef0",
+    "labels": {
+      "en": {
+        "actionName": "Bulk Update Models",
+        "actionDescription": "Adds a new model option to all legal entities (razones sociales) that have the specified brand configured. Updates both modelo_simpa and modelo_{brand} properties for contacts and deals.",
+        "appDisplayName": "SIMPA-Application",
+        "actionCardContent": "Add model {{modelo}} for brand {{marca}} to all legal entities",
+        "inputFieldLabels": {
+          "marca": "Brand",
+          "modelo": "Model"
+        },
+        "inputFieldDescriptions": {
+          "marca": "Brand name (e.g., 'QJ Motor', 'KTM', 'Royal Enfield'). The model will be added to all legal entities that have this brand configured.",
+          "modelo": "Model name to add to all properties (modelo_simpa and modelo_{brand}) for contacts and deals across all legal entities with the specified brand."
+        },
+        "outputFieldLabels": {
+          "success": "Success",
+          "message": "Message",
+          "bulkTotal": "Total Legal Entities",
+          "bulkExitosas": "Successful Updates",
+          "bulkFallidas": "Failed Updates",
+          "bulkErroresCount": "Error Count",
+          "bulkErroresDetalle": "Error Details",
+          "propertiesCreated": "Properties Created",
+          "propertiesUpdated": "Properties Updated",
+          "optionsAdded": "Options Added"
+        }
+      },
+      "es": {
+        "actionName": "Actualización Masiva de Modelos",
+        "actionDescription": "Agrega una nueva opción de modelo a todas las razones sociales que tengan la marca especificada configurada. Actualiza las propiedades modelo_simpa y modelo_{marca} para contactos y negocios.",
+        "appDisplayName": "SIMPA-Application",
+        "actionCardContent": "Agregar modelo {{modelo}} para marca {{marca}} a todas las razones sociales",
+        "inputFieldLabels": {
+          "marca": "Marca",
+          "modelo": "Modelo"
+        },
+        "inputFieldDescriptions": {
+          "marca": "Nombre de la marca (ej: 'QJ Motor', 'KTM', 'Royal Enfield'). El modelo se agregará a todas las razones sociales que tengan esta marca configurada.",
+          "modelo": "Nombre del modelo a agregar a todas las propiedades (modelo_simpa y modelo_{marca}) para contactos y negocios en todas las razones sociales con la marca especificada."
+        },
+        "outputFieldLabels": {
+          "success": "Éxito",
+          "message": "Mensaje",
+          "bulkTotal": "Total Razones Sociales",
+          "bulkExitosas": "Actualizaciones Exitosas",
+          "bulkFallidas": "Actualizaciones Fallidas",
+          "bulkErroresCount": "Cantidad de Errores",
+          "bulkErroresDetalle": "Detalle de Errores",
+          "propertiesCreated": "Propiedades Creadas",
+          "propertiesUpdated": "Propiedades Actualizadas",
+          "optionsAdded": "Opciones Agregadas"
+        }
+      }
+    },
+    "objectTypes": [
+      "CONTACT",
+      "DEAL"
+    ],
+    "supportedClients": [
+      {
+        "client": "WORKFLOWS"
+      }
+    ],
+    "inputFields": [
+      {
+        "typeDefinition": {
+          "name": "marca",
+          "type": "string",
+          "fieldType": "text"
+        },
+        "supportedValueTypes": [
+          "STATIC_VALUE"
+        ],
+        "isRequired": true
+      },
+      {
+        "typeDefinition": {
+          "name": "modelo",
+          "type": "string",
+          "fieldType": "text"
+        },
+        "supportedValueTypes": [
+          "STATIC_VALUE"
+        ],
+        "isRequired": true
+      }
+    ],
+    "outputFields": [
+      {
+        "typeDefinition": {
+          "name": "success",
+          "type": "string",
+          "fieldType": "text"
+        }
+      },
+      {
+        "typeDefinition": {
+          "name": "message",
+          "type": "string",
+          "fieldType": "text"
+        }
+      },
+      {
+        "typeDefinition": {
+          "name": "bulkTotal",
+          "type": "number",
+          "fieldType": "number"
+        }
+      },
+      {
+        "typeDefinition": {
+          "name": "bulkExitosas",
+          "type": "number",
+          "fieldType": "number"
+        }
+      },
+      {
+        "typeDefinition": {
+          "name": "bulkFallidas",
+          "type": "number",
+          "fieldType": "number"
+        }
+      },
+      {
+        "typeDefinition": {
+          "name": "bulkErroresCount",
+          "type": "number",
+          "fieldType": "number"
+        }
+      },
+      {
+        "typeDefinition": {
+          "name": "bulkErroresDetalle",
+          "type": "string",
+          "fieldType": "textarea"
+        }
+      },
+      {
+        "typeDefinition": {
+          "name": "propertiesCreated",
+          "type": "number",
+          "fieldType": "number"
+        }
+      },
+      {
+        "typeDefinition": {
+          "name": "propertiesUpdated",
+          "type": "number",
+          "fieldType": "number"
+        }
+      },
+      {
+        "typeDefinition": {
+          "name": "optionsAdded",
+          "type": "number",
+          "fieldType": "number"
+        }
+      }
+    ]
+  }
+}

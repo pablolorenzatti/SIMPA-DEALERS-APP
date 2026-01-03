@@ -1,0 +1,124 @@
+{
+  "uid": "workflow-action-test",
+  "type": "workflow-action",
+  "config": {
+    "actionUrl": "https://simpa-workflow-action.vercel.app/api/test-action?x-vercel-protection-bypass=e4f3b1c6a9d8e7f0123456789abcdef0",
+    "labels": {
+      "en": {
+        "actionName": "Test HubSpot Connection",
+        "actionDescription": "Simple test action to verify HubSpot API connection with private access token",
+        "appDisplayName": "SIMPA-Application",
+        "actionCardContent": "Test connection for {{marca}}",
+        "inputFieldLabels": {
+          "llave": "Private Access Token",
+          "marca": "Brand",
+          "dealer": "Dealer"
+        },
+        "inputFieldDescriptions": {
+          "llave": "Private access token for the HubSpot account to test",
+          "marca": "Brand name (optional, for logging)",
+          "dealer": "Dealer name (optional, for logging)"
+        },
+        "outputFieldLabels": {
+          "success": "Success",
+          "message": "Message",
+          "contactPropertiesCount": "Contact Properties Count",
+          "dealPropertiesCount": "Deal Properties Count"
+        }
+      },
+      "es": {
+        "actionName": "Probar Conexión HubSpot",
+        "actionDescription": "Acción de prueba simple para verificar la conexión con la API de HubSpot usando un token de acceso privado",
+        "appDisplayName": "SIMPA-Application",
+        "actionCardContent": "Probar conexión para {{marca}}",
+        "inputFieldLabels": {
+          "llave": "Token de Acceso Privado",
+          "marca": "Marca",
+          "dealer": "Concesionario"
+        },
+        "inputFieldDescriptions": {
+          "llave": "Token de acceso privado para la cuenta de HubSpot a probar",
+          "marca": "Nombre de la marca (opcional, para logging)",
+          "dealer": "Nombre del concesionario (opcional, para logging)"
+        },
+        "outputFieldLabels": {
+          "success": "Éxito",
+          "message": "Mensaje",
+          "contactPropertiesCount": "Cantidad de Propiedades de Contacto",
+          "dealPropertiesCount": "Cantidad de Propiedades de Negocio"
+        }
+      }
+    },
+    "objectTypes": [
+      "CONTACT",
+      "DEAL"
+    ],
+    "supportedClients": [
+      {
+        "client": "WORKFLOWS"
+      }
+    ],
+    "inputFields": [
+      {
+        "typeDefinition": {
+          "name": "llave",
+          "type": "string",
+          "fieldType": "text"
+        },
+        "supportedValueTypes": ["STATIC_VALUE"],
+        "isRequired": true
+      },
+      {
+        "typeDefinition": {
+          "name": "marca",
+          "type": "string",
+          "fieldType": "text"
+        },
+        "supportedValueTypes": ["STATIC_VALUE"],
+        "isRequired": false
+      },
+      {
+        "typeDefinition": {
+          "name": "dealer",
+          "type": "string",
+          "fieldType": "text"
+        },
+        "supportedValueTypes": ["STATIC_VALUE"],
+        "isRequired": false
+      }
+    ],
+    "outputFields": [
+      {
+        "typeDefinition": {
+          "name": "success",
+          "type": "string",
+          "fieldType": "text"
+        }
+      },
+      {
+        "typeDefinition": {
+          "name": "message",
+          "type": "string",
+          "fieldType": "text"
+        }
+      },
+      {
+        "typeDefinition": {
+          "name": "contactPropertiesCount",
+          "type": "number",
+          "fieldType": "number"
+        }
+      },
+      {
+        "typeDefinition": {
+          "name": "dealPropertiesCount",
+          "type": "number",
+          "fieldType": "number"
+        }
+      }
+    ],
+    "objectRequestOptions": {
+      "properties": []
+    }
+  }
+}

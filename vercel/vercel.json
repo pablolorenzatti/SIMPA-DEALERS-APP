@@ -1,0 +1,25 @@
+{
+  "functions": {
+    "api/workflow-action.js": {
+      "includeFiles": "src/**"
+    },
+    "api/forward-lead.js": {
+      "includeFiles": "src/**"
+    },
+    "api/webhook-enrich.js": {
+      "includeFiles": "src/**"
+    },
+    "api/admin/index.js": {
+      "maxDuration": 60
+    },
+    "api/admin/api.js": {
+      "maxDuration": 60
+    }
+  },
+  "crons": [
+    {
+      "path": "/api/cron/monitor-properties",
+      "schedule": "0 10 * * *"
+    }
+  ]
+}

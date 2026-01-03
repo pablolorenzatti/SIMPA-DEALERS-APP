@@ -1,0 +1,491 @@
+{
+  "baseProperties": [
+    {
+      "name": "id_contacto_simpa",
+      "description": "ID del Contacto en SIMPA",
+      "label": "SIMPA ID Contact",
+      "groupName": "contactinformation",
+      "type": "string",
+      "hasVariableOptions": false
+    },
+    {
+      "name": "id_negocio_simpa",
+      "description": "ID del Negocio en SIMPA",
+      "label": "SIMPA ID Deal",
+      "groupName": "contactinformation",
+      "type": "string",
+      "hasVariableOptions": false
+    },
+    {
+      "name": "modelo_simpa",
+      "description": "Modelos de motos",
+      "label": "Modelo",
+      "groupName": "contactinformation",
+      "type": "enumeration",
+      "hasVariableOptions": true,
+      "optionsKey": "modelo_simpa"
+    },
+    {
+      "name": "modelo_{marca}",
+      "description": "Modelos de motos {marca}",
+      "label": "Modelo {marca}",
+      "groupName": "contactinformation",
+      "type": "enumeration",
+      "hasVariableOptions": true,
+      "optionsKey": "modelo_marca"
+    },
+    {
+      "name": "marca_simpa",
+      "description": "Marca de la moto",
+      "label": "Marca",
+      "groupName": "contactinformation",
+      "type": "enumeration",
+      "hasVariableOptions": true,
+      "optionsKey": "marca_simpa"
+    },
+    {
+      "name": "concesionarios_simpa",
+      "description": "Concesionarios disponibles",
+      "label": "Concesionarios",
+      "groupName": "contactinformation",
+      "type": "enumeration",
+      "hasVariableOptions": true,
+      "optionsKey": "concesionarios_simpa"
+    },
+    {
+      "name": "inquiry_reason",
+      "description": "Motivo de consulta",
+      "label": "Motivo de consulta",
+      "groupName": "contactinformation",
+      "type": "enumeration",
+      "hasVariableOptions": true,
+      "optionsKey": "inquiry_reason"
+    },
+    {
+      "name": "time_to_buy",
+      "description": "Tiempo estimado de compra",
+      "label": "Tiempo estimado de compra",
+      "groupName": "contactinformation",
+      "type": "enumeration",
+      "hasVariableOptions": true,
+      "optionsKey": "time_to_buy"
+    },
+    {
+      "name": "financing_type",
+      "description": "Tipo de financiación",
+      "label": "Tipo de financiación",
+      "groupName": "contactinformation",
+      "type": "enumeration",
+      "hasVariableOptions": true,
+      "optionsKey": "financing_type"
+    },
+    {
+      "name": "message",
+      "description": "Mensaje",
+      "label": "Mensaje",
+      "groupName": "contactinformation",
+      "type": "string",
+      "hasVariableOptions": false
+    },
+    {
+      "name": "motivo_de_perdida",
+      "description": "Motivo por el cual se perdió el negocio",
+      "label": "Motivo de pérdida",
+      "groupName": "contactinformation",
+      "type": "enumeration",
+      "hasVariableOptions": true,
+      "optionsKey": "motivo_de_perdida"
+    },
+    {
+      "name": "otro_motivo_de_perdida",
+      "description": "Otro motivo de pérdida (especificar)",
+      "label": "Otro motivo de pérdida",
+      "groupName": "contactinformation",
+      "type": "string",
+      "hasVariableOptions": false
+    }
+  ],
+  "optionsConfig": {
+    "marca_simpa": {
+      "moto morini": [
+        "Moto Morini"
+      ],
+      "royal enfield": [
+        "Royal Enfield"
+      ],
+      "ktm": [
+        "KTM"
+      ],
+      "cf moto": [
+        "CF MOTO"
+      ],
+      "qj motor": [
+        "QJ Motor"
+      ],
+      "vespa": [
+        "Vespa"
+      ],
+      "motoplex": [
+        "Motoplex"
+      ]
+    },
+    "concesionarios_simpa": {
+      "CFMOTO ROSARIO": [
+        "CFMOTO ROSARIO"
+      ],
+      "KTM BARILOCHE": [
+        "KTM BARILOCHE"
+      ],
+      "KTM COMODORO RIVADAVIA": [
+        "KTM COMODORO RIVADAVIA"
+      ],
+      "KTM CORDOBA": [
+        "KTM CORDOBA"
+      ],
+      "KTM ENTRE RIOS": [
+        "KTM ENTRE RIOS"
+      ],
+      "KTM FRANCISCO ALVAREZ": [
+        "KTM FRANCISCO ALVAREZ"
+      ],
+      "KTM LA LUCILA": [
+        "KTM LA LUCILA"
+      ],
+      "KTM LA PLATA": [
+        "KTM LA PLATA"
+      ],
+      "KTM LANUS": [
+        "KTM LANUS"
+      ],
+      "KTM MAR DEL PLATA": [
+        "KTM MAR DEL PLATA"
+      ],
+      "KTM MENDOZA": [
+        "KTM MENDOZA"
+      ],
+      "KTM NEUQUEN": [
+        "KTM NEUQUEN"
+      ],
+      "KTM PALERMO": [
+        "KTM PALERMO"
+      ],
+      "KTM PILAR": [
+        "KTM PILAR"
+      ],
+      "KTM PINAMAR": [
+        "KTM PINAMAR"
+      ],
+      "KTM PUERTO MADERO": [
+        "KTM PUERTO MADERO"
+      ],
+      "KTM QUILMES": [
+        "KTM QUILMES"
+      ],
+      "KTM RESISTENCIA": [
+        "KTM RESISTENCIA"
+      ],
+      "KTM ROSARIO": [
+        "KTM ROSARIO"
+      ],
+      "KTM SALTA": [
+        "KTM SALTA"
+      ],
+      "KTM SAN JUAN": [
+        "KTM SAN JUAN"
+      ],
+      "KTM TUCUMAN": [
+        "KTM TUCUMAN"
+      ],
+      "KTM URQUIZA": [
+        "KTM URQUIZA"
+      ],
+      "KTM VILLA GESELL": [
+        "KTM VILLA GESELL"
+      ],
+      "KTM VILLA MARIA": [
+        "KTM VILLA MARIA"
+      ],
+      "MOTO MORINI CORRIENTES": [
+        "MOTO MORINI CORRIENTES"
+      ],
+      "MOTO MORINI LELOIR": [
+        "MOTO MORINI LELOIR"
+      ],
+      "MOTO MORINI NEUQUEN": [
+        "MOTO MORINI NEUQUEN"
+      ],
+      "MOTO MORINI PILAR": [
+        "MOTO MORINI PILAR"
+      ],
+      "MOTO MORINI PUERTO MADERO": [
+        "MOTO MORINI PUERTO MADERO"
+      ],
+      "MOTO MORINI QUILMES": [
+        "MOTO MORINI QUILMES"
+      ],
+      "MOTO MORINI ROSARIO": [
+        "MOTO MORINI ROSARIO"
+      ],
+      "MOTO MORINI SALTA": [
+        "MOTO MORINI SALTA"
+      ],
+      "MOTO MORINI VICENTE LOPEZ": [
+        "MOTO MORINI VICENTE LOPEZ"
+      ],
+      "MOTOMORINI CORDOBA": [
+        "MOTOMORINI CORDOBA"
+      ],
+      "MOTOMORINI MENDOZA": [
+        "MOTOMORINI MENDOZA"
+      ],
+      "MOTOMORINI RIO CUARTO": [
+        "MOTOMORINI RIO CUARTO"
+      ],
+      "MOTOMORINI TUCUMAN": [
+        "MOTOMORINI TUCUMAN"
+      ],
+      "MOTOPLEX CHACO": [
+        "MOTOPLEX CHACO"
+      ],
+      "MOTOPLEX CORDOBA": [
+        "MOTOPLEX CORDOBA"
+      ],
+      "MOTOPLEX DEVOTO": [
+        "MOTOPLEX DEVOTO"
+      ],
+      "MOTOPLEX LELOIR": [
+        "MOTOPLEX LELOIR"
+      ],
+      "MOTOPLEX MENDOZA": [
+        "MOTOPLEX MENDOZA"
+      ],
+      "MOTOPLEX PALERMO": [
+        "MOTOPLEX PALERMO"
+      ],
+      "MOTOPLEX PUERTO MADERO": [
+        "MOTOPLEX PUERTO MADERO"
+      ],
+      "MOTOPLEX QUILMES": [
+        "MOTOPLEX QUILMES"
+      ],
+      "MOTOPLEX ROSARIO": [
+        "MOTOPLEX ROSARIO"
+      ],
+      "MOTOPLEX SALTA": [
+        "MOTOPLEX SALTA"
+      ],
+      "MOTOPLEX SAN ISIDRO": [
+        "MOTOPLEX SAN ISIDRO"
+      ],
+      "MOTOPLEX TUCUMAN": [
+        "MOTOPLEX TUCUMAN"
+      ],
+      "QJ BELGRANO": [
+        "QJ BELGRANO"
+      ],
+      "QJ CATAMARCA": [
+        "QJ CATAMARCA"
+      ],
+      "QJ CORDOBA": [
+        "QJ CORDOBA"
+      ],
+      "QJ ENTRE RIOS": [
+        "QJ ENTRE RIOS"
+      ],
+      "QJ ESCOBAR": [
+        "QJ ESCOBAR"
+      ],
+      "QJ LELOIR": [
+        "QJ LELOIR"
+      ],
+      "QJ MENDOZA": [
+        "QJ MENDOZA"
+      ],
+      "QJ MOTOR ROSARIO": [
+        "QJ MOTOR ROSARIO"
+      ],
+      "QJ PILAR": [
+        "QJ PILAR"
+      ],
+      "QJ PUERTO MADRYN": [
+        "QJ PUERTO MADRYN"
+      ],
+      "QJ QUILMES": [
+        "QJ QUILMES"
+      ],
+      "QJ RIO CUARTO": [
+        "QJ RIO CUARTO"
+      ],
+      "QJ ROSARIO": [
+        "QJ ROSARIO"
+      ],
+      "QJ SALTA": [
+        "QJ SALTA"
+      ],
+      "QJ SAN ISIDRO": [
+        "QJ SAN ISIDRO"
+      ],
+      "QJ TUCUMAN": [
+        "QJ TUCUMAN"
+      ],
+      "QJ VILLA LURO": [
+        "QJ VILLA LURO"
+      ],
+      "QJ VILLA MARIA": [
+        "QJ VILLA MARIA"
+      ],
+      "ROYAL ENFIELD BAHIA BLANCA": [
+        "ROYAL ENFIELD BAHIA BLANCA"
+      ],
+      "ROYAL ENFIELD BANFIELD": [
+        "ROYAL ENFIELD BANFIELD"
+      ],
+      "ROYAL ENFIELD BELGRANO CABA": [
+        "ROYAL ENFIELD BELGRANO CABA"
+      ],
+      "ROYAL ENFIELD CATAMARCA": [
+        "ROYAL ENFIELD CATAMARCA"
+      ],
+      "ROYAL ENFIELD CHACO": [
+        "ROYAL ENFIELD CHACO"
+      ],
+      "ROYAL ENFIELD CORDOBA": [
+        "ROYAL ENFIELD CORDOBA"
+      ],
+      "ROYAL ENFIELD CORRIENTES": [
+        "ROYAL ENFIELD CORRIENTES"
+      ],
+      "ROYAL ENFIELD DEVOTO": [
+        "ROYAL ENFIELD DEVOTO"
+      ],
+      "ROYAL ENFIELD JUJUY": [
+        "ROYAL ENFIELD JUJUY"
+      ],
+      "ROYAL ENFIELD LA PLATA": [
+        "ROYAL ENFIELD LA PLATA"
+      ],
+      "ROYAL ENFIELD LELOIR": [
+        "ROYAL ENFIELD LELOIR"
+      ],
+      "ROYAL ENFIELD MADERO": [
+        "ROYAL ENFIELD MADERO"
+      ],
+      "ROYAL ENFIELD MAR DEL PLATA": [
+        "ROYAL ENFIELD MAR DEL PLATA"
+      ],
+      "ROYAL ENFIELD MENDOZA": [
+        "ROYAL ENFIELD MENDOZA"
+      ],
+      "ROYAL ENFIELD NEUQUEN": [
+        "ROYAL ENFIELD NEUQUEN"
+      ],
+      "ROYAL ENFIELD PILAR": [
+        "ROYAL ENFIELD PILAR"
+      ],
+      "ROYAL ENFIELD RIO CUARTO": [
+        "ROYAL ENFIELD RIO CUARTO"
+      ],
+      "ROYAL ENFIELD ROSARIO": [
+        "ROYAL ENFIELD ROSARIO"
+      ],
+      "ROYAL ENFIELD SALTA": [
+        "ROYAL ENFIELD SALTA"
+      ],
+      "ROYAL ENFIELD SAN JUAN": [
+        "ROYAL ENFIELD SAN JUAN"
+      ],
+      "ROYAL ENFIELD SAN NICOLAS": [
+        "ROYAL ENFIELD SAN NICOLAS"
+      ],
+      "ROYAL ENFIELD TANDIL": [
+        "ROYAL ENFIELD TANDIL"
+      ],
+      "ROYAL ENFIELD TUCUMAN": [
+        "ROYAL ENFIELD TUCUMAN"
+      ],
+      "ROYAL ENFIELD VICENTE LOPEZ": [
+        "ROYAL ENFIELD VICENTE LOPEZ"
+      ],
+      "VESPA STORE BAHIA BLANCA": [
+        "VESPA STORE BAHIA BLANCA"
+      ],
+      "VESPA STORE LA PLATA": [
+        "VESPA STORE LA PLATA"
+      ],
+      "VESPA STORE NEUQUEN": [
+        "VESPA STORE NEUQUEN"
+      ]
+    },
+    "inquiry_reason": {
+      "Quiero más información de producto": [
+        "Quiero más información de producto"
+      ],
+      "¡Quiero reservar la moto ya!": [
+        "¡Quiero reservar la moto ya!"
+      ],
+      "Quiero reservar un Test Ride": [
+        "Quiero reservar un Test Ride"
+      ],
+      "Preventa": [
+        "Preventa"
+      ],
+      "Info Financiación": [
+        "Info Financiación"
+      ],
+      "Posventa": [
+        "Posventa"
+      ],
+      "Otro": [
+        "Otro"
+      ]
+    },
+    "time_to_buy": {
+      "Inmediato (30 días)": [
+        "Inmediato (30 días)"
+      ],
+      "Corto plazo (60 días)": [
+        "Corto plazo (60 días)"
+      ],
+      "Medio plazo (90 días)": [
+        "Medio plazo (90 días)"
+      ],
+      "Largo plazo (180 días)": [
+        "Largo plazo (180 días)"
+      ]
+    },
+    "financing_type": {
+      "Financiación parcial": [
+        "Financiación parcial"
+      ],
+      "Financiación total": [
+        "Financiación total"
+      ],
+      "Pago de contado": [
+        "Pago de contado"
+      ],
+      "Aún no me decido": [
+        "Aún no me decido"
+      ]
+    },
+    "motivo_de_perdida": {
+      "Precio": [
+        "Precio"
+      ],
+      "Producto": [
+        "Producto"
+      ],
+      "Financiación": [
+        "Financiación"
+      ],
+      "Atención": [
+        "Atención"
+      ],
+      "Stock": [
+        "Stock"
+      ],
+      "Otro": [
+        "Otro"
+      ]
+    }
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "functions": {
+    "api/workflow-action.js": {
+      "includeFiles": "src/**"
+    },
+    "api/forward-lead.js": {
+      "includeFiles": "src/**"
+    },
+    "api/test-action.js": {
+      "includeFiles": "src/**"
+    },
+    "api/bulk-models.js": {
+      "includeFiles": "src/**"
+     },
+    "api/check-lead-status.js": {
+      "includeFiles": "src/**"
+    },
+    "api/webhook-enrich.js": {
+      "includeFiles": "src/**"
+    }
+  }
+}

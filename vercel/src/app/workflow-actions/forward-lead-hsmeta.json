@@ -1,0 +1,355 @@
+{
+  "uid": "workflow-action-forward-lead",
+  "type": "workflow-action",
+  "config": {
+    "actionUrl": "https://simpa-workflow-action-9fadqix15-pablo-lorenzattis-projects.vercel.app/api/forward-lead?x-vercel-protection-bypass=e4f3b1c6a9d8e7f0123456789abcdef0",
+    "labels": {
+      "en": {
+        "actionName": "Forward Lead To Dealer",
+        "actionDescription": "Pushes the lead (contact + deal) to the dealer HubSpot portal using the configured secret.",
+        "appDisplayName": "SIMPA-Application",
+        "actionCardContent": "Send lead for {{dealer_name}}",
+        "inputFieldLabels": {
+          "razon_social": "Legal Entity",
+          "dealer_name": "Dealer Name",
+          "contact_firstname": "First Name",
+          "contact_lastname": "Last Name",
+          "contact_email": "Email",
+          "contact_phone": "Phone",
+          "contact_city": "City",
+          "contact_brand": "Interested Brand",
+          "contact_model": "Interested Model",
+          "contact_comments": "Comments",
+          "financing_option": "Financing",
+          "inquiry_reason": "Reason for Inquiry",
+          "purchase_timeline": "Purchase Timeline",
+          "origin_contact_id": "Original Contact ID",
+          "origin_deal_id": "Original Deal ID",
+          "deal_pipeline": "Target Pipeline ID",
+          "deal_stage": "Target Deal Stage ID"
+        },
+        "inputFieldDescriptions": {
+          "razon_social": "Legal entity that owns the dealer. It must match a configured secret.",
+          "dealer_name": "Friendly name of the dealer receiving the lead. Must be listed under the legal entity.",
+          "contact_firstname": "Lead first name.",
+          "contact_lastname": "Lead last name.",
+          "contact_email": "Lead primary email address.",
+          "contact_phone": "Lead primary phone.",
+          "contact_city": "City of the lead.",
+          "contact_brand": "Brand associated with the lead.",
+          "contact_model": "Model of interest.",
+          "contact_comments": "Additional comments provided by the lead.",
+          "financing_option": "Selected financing option.",
+          "inquiry_reason": "Reason that triggered the inquiry.",
+          "purchase_timeline": "Expected purchase timeline.",
+          "origin_contact_id": "Optional contact ID in the origin portal.",
+          "origin_deal_id": "Optional deal ID in the origin portal.",
+          "deal_pipeline": "Optional pipeline ID to use when creating the deal. Defaults to the portal default pipeline.",
+          "deal_stage": "Optional stage ID to use when creating the deal. Defaults to the first stage of the pipeline."
+        },
+        "outputFieldLabels": {
+          "success": "Success",
+          "message": "Message",
+          "dealerContactId": "Dealer Contact ID",
+          "dealerDealId": "Dealer Deal ID",
+          "contactAction": "Contact Result",
+          "dealAction": "Deal Result"
+        }
+      },
+      "es": {
+        "actionName": "Enviar Lead al Concesionario",
+        "actionDescription": "Envía el lead (contacto + negocio) al portal de HubSpot del concesionario usando el secreto configurado.",
+        "appDisplayName": "SIMPA-Application",
+        "actionCardContent": "Enviar lead a {{dealer_name}}",
+        "inputFieldLabels": {
+          "razon_social": "Razón Social",
+          "dealer_name": "Nombre del Concesionario",
+          "contact_firstname": "Nombre",
+          "contact_lastname": "Apellido",
+          "contact_email": "Email",
+          "contact_phone": "Teléfono",
+          "contact_city": "Ciudad",
+          "contact_brand": "Marca de Interés",
+          "contact_model": "Modelo de Interés",
+          "contact_comments": "Comentarios",
+          "financing_option": "Financiación",
+          "inquiry_reason": "Motivo de Consulta",
+          "purchase_timeline": "Plazo de Compra",
+          "origin_contact_id": "ID Contacto Origen",
+          "origin_deal_id": "ID Negocio Origen",
+          "deal_pipeline": "ID del Pipeline Destino",
+          "deal_stage": "ID de la Etapa Destino"
+        },
+        "inputFieldDescriptions": {
+          "razon_social": "Razón social que posee al concesionario. Debe coincidir con un secreto configurado.",
+          "dealer_name": "Nombre del concesionario incluido en la razón social configurada.",
+          "contact_firstname": "Nombre del lead.",
+          "contact_lastname": "Apellido del lead.",
+          "contact_email": "Correo electrónico del lead.",
+          "contact_phone": "Teléfono principal del lead.",
+          "contact_city": "Ciudad del lead.",
+          "contact_brand": "Marca asociada al lead.",
+          "contact_model": "Modelo de interés.",
+          "contact_comments": "Comentarios adicionales proporcionados por el lead.",
+          "financing_option": "Opción de financiación seleccionada.",
+          "inquiry_reason": "Motivo por el cual se generó la consulta.",
+          "purchase_timeline": "Tiempo estimado de compra.",
+          "origin_contact_id": "ID del contacto en el portal origen (opcional).",
+          "origin_deal_id": "ID del negocio en el portal origen (opcional).",
+          "deal_pipeline": "Pipeline destino para el negocio (opcional). Por defecto usa el pipeline del portal.",
+          "deal_stage": "Etapa destino para el negocio (opcional). Por defecto usa la primera etapa disponible."
+        },
+        "outputFieldLabels": {
+          "success": "Éxito",
+          "message": "Mensaje",
+          "dealerContactId": "ID Contacto Concesionario",
+          "dealerDealId": "ID Negocio Concesionario",
+          "contactAction": "Acción sobre Contacto",
+          "dealAction": "Acción sobre Negocio"
+        }
+      }
+    },
+    "objectTypes": [
+      "CONTACT",
+      "DEAL"
+    ],
+    "supportedClients": [
+      {
+        "client": "WORKFLOWS"
+      }
+    ],
+    "inputFields": [
+      {
+        "typeDefinition": {
+          "name": "razon_social",
+          "type": "string",
+          "fieldType": "text"
+        },
+        "supportedValueTypes": [
+          "STATIC_VALUE"
+        ],
+        "isRequired": false
+      },
+      {
+        "typeDefinition": {
+          "name": "dealer_name",
+          "type": "string",
+          "fieldType": "text"
+        },
+        "supportedValueTypes": [
+          "STATIC_VALUE"
+        ],
+        "isRequired": false
+      },
+      {
+        "typeDefinition": {
+          "name": "contact_firstname",
+          "type": "string",
+          "fieldType": "text"
+        },
+        "supportedValueTypes": [
+          "STATIC_VALUE"
+        ],
+        "isRequired": true
+      },
+      {
+        "typeDefinition": {
+          "name": "contact_lastname",
+          "type": "string",
+          "fieldType": "text"
+        },
+        "supportedValueTypes": [
+          "STATIC_VALUE"
+        ],
+        "isRequired": false
+      },
+      {
+        "typeDefinition": {
+          "name": "contact_email",
+          "type": "string",
+          "fieldType": "text"
+        },
+        "supportedValueTypes": [
+          "STATIC_VALUE"
+        ],
+        "isRequired": false
+      },
+      {
+        "typeDefinition": {
+          "name": "contact_phone",
+          "type": "string",
+          "fieldType": "text"
+        },
+        "supportedValueTypes": [
+          "STATIC_VALUE"
+        ],
+        "isRequired": false
+      },
+      {
+        "typeDefinition": {
+          "name": "contact_city",
+          "type": "string",
+          "fieldType": "text"
+        },
+        "supportedValueTypes": [
+          "STATIC_VALUE"
+        ],
+        "isRequired": false
+      },
+      {
+        "typeDefinition": {
+          "name": "contact_brand",
+          "type": "string",
+          "fieldType": "text"
+        },
+        "supportedValueTypes": [
+          "STATIC_VALUE"
+        ],
+        "isRequired": false
+      },
+      {
+        "typeDefinition": {
+          "name": "contact_model",
+          "type": "string",
+          "fieldType": "text"
+        },
+        "supportedValueTypes": [
+          "STATIC_VALUE"
+        ],
+        "isRequired": false
+      },
+      {
+        "typeDefinition": {
+          "name": "contact_comments",
+          "type": "string",
+          "fieldType": "textarea"
+        },
+        "supportedValueTypes": [
+          "STATIC_VALUE"
+        ],
+        "isRequired": false
+      },
+      {
+        "typeDefinition": {
+          "name": "financing_option",
+          "type": "string",
+          "fieldType": "text"
+        },
+        "supportedValueTypes": [
+          "STATIC_VALUE"
+        ],
+        "isRequired": false
+      },
+      {
+        "typeDefinition": {
+          "name": "inquiry_reason",
+          "type": "string",
+          "fieldType": "text"
+        },
+        "supportedValueTypes": [
+          "STATIC_VALUE"
+        ],
+        "isRequired": false
+      },
+      {
+        "typeDefinition": {
+          "name": "purchase_timeline",
+          "type": "string",
+          "fieldType": "text"
+        },
+        "supportedValueTypes": [
+          "STATIC_VALUE"
+        ],
+        "isRequired": false
+      },
+      {
+        "typeDefinition": {
+          "name": "origin_contact_id",
+          "type": "string",
+          "fieldType": "text"
+        },
+        "supportedValueTypes": [
+          "STATIC_VALUE"
+        ],
+        "isRequired": false
+      },
+      {
+        "typeDefinition": {
+          "name": "origin_deal_id",
+          "type": "string",
+          "fieldType": "text"
+        },
+        "supportedValueTypes": [
+          "STATIC_VALUE"
+        ],
+        "isRequired": false
+      },
+      {
+        "typeDefinition": {
+          "name": "deal_pipeline",
+          "type": "string",
+          "fieldType": "text"
+        },
+        "supportedValueTypes": [
+          "STATIC_VALUE"
+        ],
+        "isRequired": false
+      },
+      {
+        "typeDefinition": {
+          "name": "deal_stage",
+          "type": "string",
+          "fieldType": "text"
+        },
+        "supportedValueTypes": [
+          "STATIC_VALUE"
+        ],
+        "isRequired": false
+      }
+    ],
+    "outputFields": [
+      {
+        "typeDefinition": {
+          "name": "success",
+          "type": "string",
+          "fieldType": "text"
+        }
+      },
+      {
+        "typeDefinition": {
+          "name": "message",
+          "type": "string",
+          "fieldType": "text"
+        }
+      },
+      {
+        "typeDefinition": {
+          "name": "dealerContactId",
+          "type": "string",
+          "fieldType": "text"
+        }
+      },
+      {
+        "typeDefinition": {
+          "name": "dealerDealId",
+          "type": "string",
+          "fieldType": "text"
+        }
+      },
+      {
+        "typeDefinition": {
+          "name": "contactAction",
+          "type": "string",
+          "fieldType": "text"
+        }
+      },
+      {
+        "typeDefinition": {
+          "name": "dealAction",
+          "type": "string",
+          "fieldType": "text"
+        }
+      }
+    ]
+  }
+}

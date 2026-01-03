@@ -1,0 +1,187 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>SIMPA - Instalación OAuth Automática</title>
+  <style>
+    :root{ --ok:#0a7f3f; --err:#b00020; --muted:#495057; --info:#0066cc; --warn:#ff9800; }
+    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; margin: 40px; color: #0b0d0e; line-height: 1.6; background: #f8f9fa; }
+    code { background:#f1f3f5; padding:2px 6px; border-radius:6px; font-family: 'Monaco', 'Menlo', monospace; }
+    pre { background:#fff; padding:12px; border-radius:8px; overflow-x:auto; border:1px solid #e9ecef; }
+    .box { max-width: 920px; margin: 0 auto; background: white; padding: 32px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+    .ok{ color: var(--ok); font-weight:600; }
+    .err{ color: var(--err); font-weight:600; }
+    .info{ color: var(--info); }
+    .warn{ color: var(--warn); }
+    .muted{ color: var(--muted); }
+    table{ border-collapse: collapse; margin-top: 16px; width:100%; }
+    td,th{ border:1px solid #e9ecef; padding:8px 12px; text-align:left; }
+    th{ background:#f8f9fa; font-weight:600; }
+    .step{ background:#fff; border-left:4px solid var(--info); padding:16px; margin:16px 0; border-radius:4px; }
+    .step h4{ margin-top:0; color:var(--info); }
+    .spinner{ display:inline-block; width:16px; height:16px; border:3px solid #f3f3f3; border-top:3px solid #0066cc; border-radius:50%; animation:spin 1s linear infinite; margin-right:8px; }
+    @keyframes spin{ 0%{ transform:rotate(0deg); } 100%{ transform:rotate(360deg); } }
+    .success-box{ background:#d4edda; border:1px solid #c3e6cb; color:#155724; padding:16px; border-radius:6px; margin:16px 0; }
+    .error-box{ background:#f8d7da; border:1px solid #f5c6cb; color:#721c24; padding:16px; border-radius:6px; margin:16px 0; }
+    .info-box{ background:#d1ecf1; border:1px solid #bee5eb; color:#0c5460; padding:16px; border-radius:6px; margin:16px 0; }
+    .hidden{ display:none; }
+  </style>
+  <script>
+    function getAllParams(){
+      const out = {};
+      const qs = new URLSearchParams(location.search);
+      for(const [k,v] of qs.entries()) out[k]=v;
+      if(location.hash && location.hash.includes('=')){
+        const hs = new URLSearchParams(location.hash.replace(/^#/,''));
+        for(const [k,v] of hs.entries()) out[k]=out[k]||v;
+      }
+      return out;
+    }
+    
+    async function exchangeCodeForTokens(code){
+      const exchangeInfo = document.getElementById('exchangeInfo');
+      exchangeInfo.innerHTML = '<span class="spinner"></span> Intercambiando código por tokens automáticamente...';
+      
+      try {
+        const response = await fetch('/api/exchange', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ code })
+        });
+        
+        const result = await response.json();
+        
+        if(result.success){
+          exchangeInfo.innerHTML = 
+            '<div class="success-box">' +
+            '✅ <strong>¡Instalación completada exitosamente!</strong><br>' +
+            'Access Token recibido. La app está instalada en tu cuenta.<br>' +
+            'Hub ID: <code>' + result.data.hub_id + '</code><br>' +
+            'Refresh Token guardado. Puedes usar este token para renovar el access token cuando expire.<br>' +
+            '<br>' +
+            '🎉 <strong>La app "SIMPA-Application" está ahora instalada en tu cuenta.</strong><br>' +
+            'Verifica en: Settings → Connected apps → SIMPA-Application' +
+            '</div>';
+          
+          document.getElementById('tokenResult').style.display = 'block';
+          document.getElementById('tokenResult').textContent = JSON.stringify(result.data, null, 2);
+          
+          console.log('✅ Tokens recibidos:', result.data);
+        } else {
+          exchangeInfo.innerHTML = 
+            '<div class="error-box">' +
+            '❌ <strong>Error en el intercambio:</strong><br>' +
+            (result.error.message || result.error.status || JSON.stringify(result.error)) + '<br><br>' +
+            '<strong>Posibles causas:</strong><br>' +
+            '- Code expirado (genera uno nuevo)<br>' +
+            '- Client ID/Secret incorrectos en variables de entorno<br>' +
+            '- redirect_uri no coincide<br>' +
+            '<br>' +
+            'Verifica que el servidor tenga CLIENT_ID y CLIENT_SECRET configurados correctamente.' +
+            '</div>';
+          
+          console.error('❌ Error:', result.error);
+        }
+      } catch(error){
+        exchangeInfo.innerHTML = 
+          '<div class="error-box">' +
+          '❌ <strong>Error de conexión:</strong><br>' +
+          error.message + '<br><br>' +
+          'Asegúrate de que el servidor esté corriendo con:<br>' +
+          '<code>node server.js</code>' +
+          '</div>';
+        
+        console.error('❌ Error de conexión:', error);
+      }
+    }
+    
+    function render(){
+      const p = getAllParams();
+      const code = p.code || null;
+      const error = p.error || p.error_description || p.errorDescription || null;
+      const hasCode = !!code && !error;
+      
+      document.getElementById('status').textContent = code ? 'Éxito - Code recibido' : (error ? 'Error' : 'Esperando código...');
+      document.getElementById('status').className = code ? 'ok' : (error ? 'err' : 'muted');
+      document.getElementById('code').textContent = code || '(sin code)';
+      document.getElementById('state').textContent = p.state || '(sin state)';
+      document.getElementById('error').textContent = error || '(sin error)';
+      document.getElementById('fullUrl').textContent = location.href;
+      
+      const tbody = document.getElementById('params');
+      tbody.innerHTML = '';
+      Object.keys(p).sort().forEach(k=>{
+        const tr = document.createElement('tr');
+        const tdK = document.createElement('td'); tdK.textContent=k;
+        const tdV = document.createElement('td'); 
+        const codeEl = document.createElement('code');
+        codeEl.textContent = p[k];
+        tdV.appendChild(codeEl);
+        tr.appendChild(tdK); tr.appendChild(tdV); tbody.appendChild(tr);
+      });
+      
+      if(hasCode){
+        document.getElementById('installSection').style.display = 'block';
+        
+        // Intercambio automático inmediato
+        console.log('🔍 Code detectado, iniciando intercambio automático...');
+        exchangeCodeForTokens(code);
+      } else {
+        document.getElementById('installSection').style.display = 'none';
+      }
+      
+      console.log('[SIMPA OAuth] Params:', p);
+    }
+    
+    window.addEventListener('DOMContentLoaded', render);
+  </script>
+</head>
+<body>
+  <div class="box">
+    <h2>SIMPA - Instalación OAuth Automática: <span id="status" class="muted">...</span></h2>
+    
+    <div class="step">
+      <h4>📋 Información recibida</h4>
+      <p><strong>URL completa:</strong> <code id="fullUrl"></code></p>
+      <p><strong>Código recibido:</strong> <code id="code">(sin code)</code></p>
+      <p><strong>Estado:</strong> <code id="state">(sin state)</code></p>
+      <p><strong>Error:</strong> <code id="error">(sin error)</code></p>
+    </div>
+
+    <div id="installSection" style="display:none;">
+      <div class="step">
+        <h4>⚙️ Intercambio Automático</h4>
+        <div id="exchangeInfo" class="info-box">
+          <span class="spinner"></span> Iniciando intercambio automático...
+        </div>
+        
+        <div id="tokenResult" class="hidden" style="margin-top:16px;">
+          <h5>Tokens recibidos:</h5>
+          <pre id="tokenResult"></pre>
+        </div>
+      </div>
+
+      <div class="step">
+        <h4>✅ Verificación</h4>
+        <p>Si el intercambio fue exitoso, la app estará instalada automáticamente.</p>
+        <p>Verifica en: <strong>Settings → Connected apps → SIMPA-Application</strong> en tu cuenta de HubSpot.</p>
+        <p class="muted">No necesitas hacer nada más. El proceso es completamente automático.</p>
+      </div>
+    </div>
+
+    <h3>📊 Parámetros recibidos</h3>
+    <table>
+      <thead><tr><th>Clave</th><th>Valor</th></tr></thead>
+      <tbody id="params"></tbody>
+    </table>
+    
+    <p class="muted" style="margin-top:24px;">
+      <strong>Nota:</strong> Esta página intercambia automáticamente el código por tokens usando las credenciales configuradas en el servidor.
+      <br>No necesitas hacer nada manualmente.
+    </p>
+  </div>
+</body>
+</html>

@@ -1,0 +1,130 @@
+{
+  "GASGAS": {
+    "pipelineId": "61078965",
+    "pipelineLabel": "GASGAS Pipeline",
+    "stages": [
+      {
+        "stageId": "119903131",
+        "stageLabel": "Etapa 1",
+        "probability": 0.1
+      },
+      {
+        "stageId": "119903132",
+        "stageLabel": "Etapa 2",
+        "probability": 0.3
+      },
+      {
+        "stageId": "119903133",
+        "stageLabel": "Etapa 3",
+        "probability": 0.5
+      },
+      {
+        "stageId": "119903134",
+        "stageLabel": "Etapa 4",
+        "probability": 0.5
+      },
+      {
+        "stageId": "119903135",
+        "stageLabel": "Etapa 5",
+        "probability": 1.0
+      },
+      {
+        "stageId": "119903136",
+        "stageLabel": "Etapa 6",
+        "probability": 0.0
+      },
+      {
+        "stageId": "119903137",
+        "stageLabel": "Etapa 7",
+        "probability": 1.0
+      }
+    ]
+  },
+  "QJ MOTOR": {
+    "pipelineId": "114217315",
+    "pipelineLabel": "QJ MOTOR Pipeline",
+    "stages": [
+      {
+        "stageId": "202729333",
+        "stageLabel": "Etapa 2",
+        "probability": 0.3
+      },
+      {
+        "stageId": "202729334",
+        "stageLabel": "Etapa 3",
+        "probability": 0.5
+      },
+      {
+        "stageId": "202729335",
+        "stageLabel": "Etapa 4",
+        "probability": 0.5
+      },
+      {
+        "stageId": "202729336",
+        "stageLabel": "Etapa 5",
+        "probability": 0.8
+      },
+      {
+        "stageId": "202729337",
+        "stageLabel": "Etapa 6",
+        "probability": 0.9
+      },
+      {
+        "stageId": "202729338",
+        "stageLabel": "Etapa 7",
+        "probability": 1.0
+      },
+      {
+        "stageId": "202729345",
+        "stageLabel": "Etapa 8",
+        "probability": 1.0
+      },
+      {
+        "stageId": "202729339",
+        "stageLabel": "Etapa 7",
+        "probability": 0.0
+      }
+    ]
+  },
+  "MOTO MORINI": {
+    "pipelineId": "84010061",
+    "pipelineLabel": "MOTO MORINI Pipeline",
+    "stages": [
+      {
+        "stageId": "157420950",
+        "stageLabel": "Etapa 2",
+        "probability": 0.3
+      },
+      {
+        "stageId": "157420951",
+        "stageLabel": "Etapa 3",
+        "probability": 0.5
+      },
+      {
+        "stageId": "157420952",
+        "stageLabel": "Etapa 4",
+        "probability": 0.7
+      },
+      {
+        "stageId": "157408391",
+        "stageLabel": "Etapa 5",
+        "probability": 0.9
+      },
+      {
+        "stageId": "157420953",
+        "stageLabel": "Etapa 7",
+        "probability": 1.0
+      },
+      {
+        "stageId": "157420954",
+        "stageLabel": "Etapa 8",
+        "probability": 0.99
+      },
+      {
+        "stageId": "157408392",
+        "stageLabel": "Etapa 7",
+        "probability": 0.0
+      }
+    ]
+  }
+}

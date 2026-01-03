@@ -1,0 +1,44 @@
+{
+  "uid": "app-SIMPA",
+  "type": "app",
+  "config": {
+    "description": "An example to demonstrate how to build a private oauth app with developer projects.",
+    "name": "SIMPA-Application",
+    "distribution": "private",
+    "auth": {
+      "type": "oauth",
+      "redirectUrls": [
+        "https://simpa-workflow-action.vercel.app/api/auth",
+        "http://localhost:3000"
+      ],
+      "requiredScopes": [
+        "oauth",
+        "automation",
+        "crm.objects.contacts.read",
+        "crm.objects.contacts.write",
+        "crm.objects.deals.read",
+        "crm.objects.deals.write",
+        "crm.schemas.contacts.read",
+        "crm.schemas.contacts.write",
+        "crm.schemas.deals.read",
+        "crm.schemas.deals.write"
+      ],
+      "optionalScopes": [],
+      "conditionallyRequiredScopes": []
+    },
+    "permittedUrls": {
+      "fetch": [
+        "https://api.hubapi.com",
+        "https://simpa.requestcatcher.com"
+      ],
+      "iframe": [],
+      "img": []
+    },
+    "support": {
+      "supportEmail": "support@example.com",
+      "documentationUrl": "https://example.com/docs",
+      "supportUrl": "https://example.com/support",
+      "supportPhone": "+18005555555"
+    }
+  }
+}

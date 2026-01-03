@@ -1,0 +1,720 @@
+{
+  "SPORTADVENTURE": {
+    "portalId": "3788917",
+    "tokenEnv": "SPORTADVENTURE_TOKEN",
+    "brands": [
+      "Moto Morini",
+      "Royal Enfield",
+      "KTM",
+      "QJ Motor",
+      "CF Moto",
+      "Motoplex",
+      "Vespa",
+      "Aprilia",
+      "Moto Guzzi",
+      "Piaggio"
+    ],
+    "dealers": [
+      "CFMOTO  Rosario",
+      "QJ Motor Rosario",
+      "Royal Enfield Rosario",
+      "Royal Enfield San Nicolás",
+      "KTM ROSARIO",
+      "MOTO MORINI ROSARIO",
+      "MOTOPLEX ROSARIO",
+      "QJ MOTOR ROSARIO"
+    ]
+  },
+  "BAMP MOTORCYCLES SA": {
+    "portalId": null,
+    "tokenEnv": "BAMP_MOTORCYCLES_SA_TOKEN",
+    "brands": [
+      "Royal Enfield",
+      "KTM",
+      "Vespa"
+    ],
+    "dealers": [
+      "KTM LA PLATA",
+      "VESPA STORE LA PLATA",
+      "ROYAL ENFIELD LA PLATA"
+    ],
+    "pipelineMapping": {
+      "default": {
+        "pipeline": "default",
+        "stage": "54443288"
+      }
+    }
+  },
+  "I CASA": {
+    "portalId": null,
+    "tokenEnv": "I_CASA_TOKEN",
+    "brands": [
+      "Moto Morini",
+      "Royal Enfield",
+      "KTM",
+      "QJ Motor"
+    ],
+    "dealers": [
+      "KTM CÓRDOBA",
+      "MOTOMORINI RÍO CUARTO",
+      "QJ MOTOR RÍO CUARTO",
+      "ROYAL ENFIELD RÍO CUARTO"
+    ]
+  },
+  "RE VESPA MENDOZA SAS": {
+    "portalId": null,
+    "tokenEnv": "RE_VESPA_MENDOZA_SAS_TOKEN",
+    "brands": [
+      "Royal Enfield",
+      "Motoplex",
+      "Vespa",
+      "Aprilia",
+      "Moto Guzzi",
+      "Piaggio"
+    ],
+    "dealers": [
+      "MOTOPLEX MENDOZA",
+      "ROYAL ENFIELD MENDOZA",
+      "ROYAL ENFIELD SAN JUAN"
+    ],
+    "pipelineMapping": {
+      "Royal Enfield": {
+        "pipeline": "701956869",
+        "stage": "1025517729"
+      },
+      "default": {
+        "pipeline": "default",
+        "stage": "123971"
+      }
+    }
+  },
+  "ASIAN MOTION POINT SA": {
+    "portalId": null,
+    "tokenEnv": "ASIAN_MOTION_POINT_SA_TOKEN",
+    "brands": [
+      "QJ Motor"
+    ],
+    "dealers": [
+      "QJ MOTOR ESCOBAR",
+      "QJ MOTOR ENTRE RÍOS"
+    ]
+  },
+  "BUENOS RUMBOS SA": {
+    "portalId": null,
+    "tokenEnv": "BUENOS_RUMBOS_SA_TOKEN",
+    "brands": [
+      "QJ Motor"
+    ],
+    "dealers": [
+      "QJ MOTOR PILAR"
+    ]
+  },
+  "CLAUSELL RICARDO ARIEL": {
+    "portalId": null,
+    "tokenEnv": "CLAUSELL_RICARDO_ARIEL_TOKEN",
+    "brands": [
+      "QJ Motor"
+    ],
+    "dealers": [
+      "QJ MOTOR VILLA LURO",
+      "QJ MOTOR CABA VILLA LURO"
+    ],
+    "pipelineMapping": {
+      "QJ Motor": {
+        "pipeline": "default",
+        "stage": "751513795"
+      }
+    }
+  },
+  "LEMAMOTOR SA": {
+    "portalId": null,
+    "tokenEnv": "LEMAMOTOR_SA_TOKEN",
+    "brands": [
+      "Royal Enfield",
+      "KTM",
+      "Moto Morini",
+      "Motoplex",
+      "QJ Motor",
+      "Vespa",
+      "Aprilia",
+      "Moto Guzzi",
+      "Piaggio"
+    ],
+    "dealers": [
+      "QJ MOTOR SAN ISIDRO",
+      "ROYAL ENFIELD DEVOTO",
+      "ROYAL ENFIELD LELOIR",
+      "ROYAL ENFIELD VICENTE LÓPEZ",
+      "MOTOPLEX DEVOTO",
+      "MOTOPLEX LELOIR",
+      "MOTOPLEX SAN ISIDRO",
+      "MOTO MORINI LELOIR",
+      "KTM PALERMO"
+    ],
+    "pipelineMapping": {
+      "Moto Morini": {
+        "pipeline": "13726326",
+        "stage": "13726327"
+      },
+      "Royal Enfield": {
+        "pipeline": "13726326",
+        "stage": "13726327"
+      },
+      "QJ Motor": {
+        "pipeline": "13726326",
+        "stage": "13726327"
+      },
+      "default": {
+        "pipeline": "13726326",
+        "stage": "13726327"
+      }
+    },
+    "customProperties": {
+      "Vespa": {
+        "hubspot_owner_id": "199509295"
+      },
+      "Royal Enfield": {
+        "hubspot_owner_id": "79389356"
+      },
+      "QJ Motor": {
+        "hubspot_owner_id": "659086131"
+      },
+      "default": {}
+    }
+  },
+  "OLIVERA ROBERTO FEDERICO": {
+    "portalId": null,
+    "tokenEnv": "OLIVERA_ROBERTO_FEDERICO_TOKEN",
+    "brands": [
+      "QJ Motor"
+    ],
+    "dealers": [
+      "QJ MOTOR PUERTO MADRYN"
+    ]
+  },
+  "PRO ONE SA": {
+    "portalId": null,
+    "tokenEnv": "PRO_ONE_SA_TOKEN",
+    "brands": [
+      "QJ Motor"
+    ],
+    "dealers": [
+      "QJ MOTOR LELOIR"
+    ]
+  },
+  "QJ MENDOZA SAS": {
+    "portalId": null,
+    "tokenEnv": "QJ_MENDOZA_SAS_TOKEN",
+    "brands": [
+      "QJ Motor"
+    ],
+    "dealers": [
+      "QJ MOTOR MENDOZA"
+    ]
+  },
+  "ROYAL MOTORS SA": {
+    "portalId": null,
+    "tokenEnv": "ROYAL_MOTORS_SA_TOKEN",
+    "brands": [
+      "Royal Enfield",
+      "QJ Motor"
+    ],
+    "dealers": [
+      "QJ MOTOR SALTA",
+      "QJ MOTOR TUCUMÁN",
+      "ROYAL ENFIELD SALTA",
+      "ROYAL ENFIELD JUJUY",
+      "ROYAL ENFIELD TUCUMÁN"
+    ],
+    "pipelineMapping": {
+      "QJ Motor": {
+        "pipeline": "147138845",
+        "stage": "249336714"
+      }
+    }
+  },
+  "URBAN MOBILITY SRL": {
+    "portalId": null,
+    "tokenEnv": "URBAN_MOBILITY_SRL_TOKEN",
+    "brands": [
+      "QJ Motor"
+    ],
+    "dealers": [
+      "QJ MOTOR BELGRANO",
+      "QJ MOTOR CABA BELGRANO"
+    ]
+  },
+  "USADOS DE CALIDAD SRL": {
+    "portalId": null,
+    "tokenEnv": "USADOS_DE_CALIDAD_SRL_TOKEN",
+    "brands": [
+      "QJ Motor"
+    ],
+    "dealers": [
+      "QJ MOTOR CÓRDOBA"
+    ]
+  },
+  "BUENAS RUTAS": {
+    "portalId": null,
+    "tokenEnv": "BUENAS_RUTAS_TOKEN",
+    "brands": [
+      "Royal Enfield"
+    ],
+    "dealers": [
+      "ROYAL ENFIELD BANFIELD",
+      "ROYAL ENFIELD PUERTO MADERO",
+      "ROYAL ENFIELD PILAR"
+    ]
+  },
+  "CORDASCO": {
+    "portalId": null,
+    "tokenEnv": "CORDASCO_TOKEN",
+    "brands": [
+      "Royal Enfield"
+    ],
+    "dealers": [
+      "ROYAL ENFIELD BELGRANO",
+      "ROYAL ENFIELD NEUQUÉN"
+    ]
+  },
+  "ALTO OESTE": {
+    "portalId": null,
+    "tokenEnv": "ALTO_OESTE_TOKEN",
+    "brands": [
+      "Royal Enfield"
+    ],
+    "dealers": [
+      "ROYAL ENFIELD CATAMARCA"
+    ]
+  },
+  "MOTOLIFE SA": {
+    "portalId": null,
+    "tokenEnv": "MOTOLIFE_SA_TOKEN",
+    "brands": [
+      "Moto Morini",
+      "Royal Enfield",
+      "Motoplex",
+      "Vespa",
+      "Aprilia",
+      "Moto Guzzi",
+      "Piaggio"
+    ],
+    "dealers": [
+      "MOTOMORINI CÓRDOBA",
+      "MOTOPLEX CÓRDOBA",
+      "ROYAL ENFIELD CÓRDOBA"
+    ],
+    "pipelineMapping": {
+      "default": {
+        "pipeline": "646544147",
+        "stage": "952130885"
+      },
+      "Moto Morini": {
+        "pipeline": "646544147",
+        "stage": "952130885"
+      },
+      "Royal Enfield": {
+        "pipeline": "646544147",
+        "stage": "952130885"
+      }
+    }
+  },
+  "NSM": {
+    "portalId": null,
+    "tokenEnv": "NSM_TOKEN",
+    "brands": [
+      "Royal Enfield"
+    ],
+    "dealers": [
+      "ROYAL ENFIELD MAR DEL PLATA",
+      "ROYAL ENFIELD TANDIL"
+    ],
+    "pipelineMapping": {
+      "default": {
+        "pipeline": "default",
+        "stage": "appointmentscheduled"
+      },
+      "Royal Enfield": {
+        "pipeline": "default",
+        "stage": "5917089"
+      }
+    }
+  },
+  "REYVEN": {
+    "portalId": null,
+    "tokenEnv": "REYVEN_TOKEN",
+    "brands": [
+      "KTM",
+      "Moto Morini"
+    ],
+    "dealers": [
+      "KTM TUCUMÁN",
+      "MOTOMORINI TUCUMÁN"
+    ]
+  },
+  "SUR VALLEY SA": {
+    "portalId": null,
+    "tokenEnv": "SUR_VALLEY_SA_TOKEN",
+    "brands": [
+      "Moto Morini",
+      "KTM"
+    ],
+    "dealers": [
+      "MOTOMORINI MENDOZA",
+      "KTM MENDOZA",
+      "KTM SAN JUAN"
+    ]
+  },
+  "ADRIAN RUIZ": {
+    "portalId": null,
+    "tokenEnv": "ADRIAN_RUIZ_TOKEN",
+    "brands": [
+      "KTM"
+    ],
+    "dealers": [
+      "KTM NEUQUÉN"
+    ]
+  },
+  "ARRATE": {
+    "portalId": null,
+    "tokenEnv": "ARRATE_TOKEN",
+    "brands": [
+      "KTM"
+    ],
+    "dealers": [
+      "KTM MAR DEL PLATA"
+    ]
+  },
+  "C Y G S A S": {
+    "portalId": null,
+    "tokenEnv": "C_Y_G_S_A_S_TOKEN",
+    "brands": [
+      "Motoplex",
+      "Vespa",
+      "Aprilia",
+      "Moto Guzzi",
+      "Piaggio"
+    ],
+    "dealers": [
+      "MOTOPLEX CHACO"
+    ]
+  },
+  "COOK": {
+    "portalId": null,
+    "tokenEnv": "COOK_TOKEN",
+    "brands": [
+      "KTM"
+    ],
+    "dealers": [
+      "KTM ENTRE RÍOS"
+    ]
+  },
+  "DON DANIEL S R L": {
+    "portalId": null,
+    "tokenEnv": "DON_DANIEL_S_R_L_TOKEN",
+    "brands": [
+      "Motoplex",
+      "Vespa",
+      "Aprilia",
+      "Moto Guzzi",
+      "Piaggio"
+    ],
+    "dealers": [
+      "MOTOPLEX TUCUMÁN"
+    ]
+  },
+  "EIRAS LATITUD SUR": {
+    "portalId": null,
+    "tokenEnv": "EIRAS_LATITUD_SUR_TOKEN",
+    "brands": [
+      "KTM"
+    ],
+    "dealers": [
+      "KTM BARILOCHE"
+    ]
+  },
+  "FERNANDEZ DI SCIPIO JUAN FRANCISCO": {
+    "portalId": null,
+    "tokenEnv": "FERNANDEZ_DI_SCIPIO_JUAN_FRANCISCO_TOKEN",
+    "brands": [
+      "Vespa"
+    ],
+    "dealers": [
+      "VESPA STORE BAHIA BLANCA"
+    ]
+  },
+  "FERRARO CLAUDIO": {
+    "portalId": null,
+    "tokenEnv": "FERRARO_CLAUDIO_TOKEN",
+    "brands": [
+      "KTM"
+    ],
+    "dealers": [
+      "KTM LANÚS",
+      "KTM QUILMES"
+    ]
+  },
+  "FONSECA / SS ADVENTURE": {
+    "portalId": null,
+    "tokenEnv": "FONSECA_SS_ADVENTURE_TOKEN",
+    "brands": [
+      "KTM"
+    ],
+    "dealers": [
+      "KTM COMODORO RIVADAVIA"
+    ]
+  },
+  "GP MOTORS IMPORT EXPORT S.A./999 MOTOS": {
+    "portalId": null,
+    "tokenEnv": "GP_MOTORS_IMPORT_EXPORT_SA999_MOTOS_TOKEN",
+    "brands": [
+      "Moto Morini",
+      "Motoplex",
+      "QJ Motor",
+      "Vespa",
+      "Aprilia",
+      "Moto Guzzi",
+      "Piaggio"
+    ],
+    "dealers": [
+      "MOTO MORINI QUILMES",
+      "MOTOPLEX QUILMES",
+      "QJ MOTOR QUILMES"
+    ]
+  },
+  "HJ MOTOS S A": {
+    "portalId": null,
+    "tokenEnv": "HJ_MOTOS_S_A_TOKEN",
+    "brands": [
+      "Motoplex",
+      "Vespa",
+      "Aprilia",
+      "Moto Guzzi",
+      "Piaggio"
+    ],
+    "dealers": [
+      "MOTOPLEX PUERTO MADERO"
+    ]
+  },
+  "JALIL": {
+    "portalId": null,
+    "tokenEnv": "JALIL_TOKEN",
+    "brands": [
+      "QJ Motor"
+    ],
+    "dealers": [
+      "QJ MOTOR CATAMARCA"
+    ]
+  },
+  "KAL SRL": {
+    "portalId": null,
+    "tokenEnv": "KAL_SRL_TOKEN",
+    "brands": [
+      "KTM",
+      "Moto Morini",
+      "Motoplex",
+      "Vespa",
+      "Aprilia",
+      "Moto Guzzi",
+      "Piaggio"
+    ],
+    "dealers": [
+      "KTM SALTA",
+      "MOTO MORINI SALTA",
+      "MOTOPLEX SALTA"
+    ]
+  },
+  "LIESS SAS": {
+    "portalId": null,
+    "tokenEnv": "LIESS_SAS_TOKEN",
+    "brands": [
+      "Moto Morini",
+      "Vespa"
+    ],
+    "dealers": [
+      "MOTO MORINI NEUQUÉN",
+      "VESPA STORE NEUQUÉN"
+    ]
+  },
+  "MANDO": {
+    "portalId": null,
+    "tokenEnv": "MANDO_TOKEN",
+    "brands": [
+      "KTM",
+      "QJ Motor"
+    ],
+    "dealers": [
+      "KTM VILLA MARÍA",
+      "KTM CÓRDOBA VILLA MARÍA",
+      "QJ MOTOR VILLA MARÍA"
+    ]
+  },
+  "MK MOTOR CYKEL SRL": {
+    "portalId": null,
+    "tokenEnv": "MK_MOTOR_CYKEL_SRL_TOKEN",
+    "brands": [
+      "Moto Morini"
+    ],
+    "dealers": [
+      "MOTO MORINI PILAR"
+    ]
+  },
+  "MONTECARLO": {
+    "portalId": null,
+    "tokenEnv": "MONTECARLO_TOKEN",
+    "brands": [
+      "Royal Enfield"
+    ],
+    "dealers": [
+      "ROYAL ENFIELD CHACO",
+      "ROYAL ENFIELD CORRIENTES"
+    ]
+  },
+  "MOTO MORINI SAN ISIDRO": {
+    "portalId": null,
+    "tokenEnv": "MOTO_MORINI_SAN_ISIDRO_TOKEN",
+    "brands": [
+      "Moto Morini"
+    ],
+    "dealers": [
+      "MOTO MORINI SAN ISIDRO"
+    ]
+  },
+  "MOTOS ONE - COSENTINO": {
+    "portalId": null,
+    "tokenEnv": "MOTOS_ONE_COSENTINO_TOKEN",
+    "brands": [
+      "KTM"
+    ],
+    "dealers": [
+      "KTM PINAMAR"
+    ]
+  },
+  "MOTOS PUERTO MADERO S A": {
+    "portalId": null,
+    "tokenEnv": "MOTOS_PUERTO_MADERO_S_A_TOKEN",
+    "brands": [
+      "Moto Morini"
+    ],
+    "dealers": [
+      "MOTO MORINI PUERTO MADERO"
+    ]
+  },
+  "MOTOSWIFT": {
+    "portalId": null,
+    "tokenEnv": "MOTOSWIFT_TOKEN",
+    "brands": [
+      "KTM"
+    ],
+    "dealers": [
+      "KTM FRANCISCO ALVAREZ"
+    ]
+  },
+  "PALERMO BIKES SRL": {
+    "portalId": null,
+    "tokenEnv": "PALERMO_BIKES_SRL_TOKEN",
+    "brands": [
+      "Motoplex",
+      "Vespa",
+      "Aprilia",
+      "Moto Guzzi",
+      "Piaggio"
+    ],
+    "dealers": [
+      "MOTOPLEX PALERMO"
+    ]
+  },
+  "PEREYRA ESTEBAN": {
+    "portalId": null,
+    "tokenEnv": "PEREYRA_ESTEBAN_TOKEN",
+    "brands": [
+      "KTM"
+    ],
+    "dealers": [
+      "KTM VILLA GESELL"
+    ]
+  },
+  "PRO MOTORS": {
+    "portalId": null,
+    "tokenEnv": "PRO_MOTORS_TOKEN",
+    "brands": [
+      "KTM"
+    ],
+    "dealers": [
+      "KTM LA LUCILA",
+      "KTM PUERTO MADERO"
+    ]
+  },
+  "ROYAL BIKES": {
+    "portalId": null,
+    "tokenEnv": "ROYAL_BIKES_TOKEN",
+    "brands": [
+      "Royal Enfield"
+    ],
+    "dealers": [
+      "ROYAL ENFIELD BAHÍA BLANCA"
+    ]
+  },
+  "SBK": {
+    "portalId": null,
+    "tokenEnv": "SBK_TOKEN",
+    "brands": [
+      "KTM"
+    ],
+    "dealers": [
+      "KTM PILAR"
+    ]
+  },
+  "TOMPA S R L": {
+    "portalId": null,
+    "tokenEnv": "TOMPA_S_R_L_TOKEN",
+    "brands": [
+      "KTM",
+      "Moto Morini"
+    ],
+    "dealers": [
+      "KTM RESISTENCIA",
+      "MOTO MORINI CORRIENTES"
+    ]
+  },
+  "URQUIZA MOTOS": {
+    "portalId": null,
+    "tokenEnv": "URQUIZA_MOTOS_TOKEN",
+    "brands": [
+      "KTM"
+    ],
+    "dealers": [
+      "KTM URQUIZA"
+    ]
+  },
+  "MOTOMORINI SAN ISIDRO": {
+    "portalId": null,
+    "tokenEnv": "MOTOMORINI_SAN_ISIDRO_TOKEN",
+    "brands": [
+      "KTM"
+    ],
+    "dealers": [
+      "KTM URQUIZA"
+    ]
+  },
+  "TEST ACCOUNT": {
+    "portalId": "50104303",
+    "tokenEnv": "TEST_ACCOUNT_KEY",
+    "brands": [],
+    "dealers": [],
+    "pipelineMapping": {
+      "default": {
+        "pipeline": "default",
+        "stage": "appointmentscheduled"
+      }
+    },
+    "customProperties": {
+      "default": {
+        "hubspot_owner_id": "5344748"
+      },
+      "Moto Morini": {
+        "hubspot_owner_id": "5344748"
+      }
+    }
+  }
+}

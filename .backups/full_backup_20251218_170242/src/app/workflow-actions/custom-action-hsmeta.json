@@ -1,0 +1,320 @@
+{
+  "uid": "workflow-action-custom",
+  "type": "workflow-action",
+  "config": {
+    "actionUrl": "https://simpa-workflow-action.vercel.app/api/workflow-action?x-vercel-protection-bypass=e4f3b1c6a9d8e7f0123456789abcdef0",
+    "labels": {
+      "en": {
+        "actionName": "Configure External Account Properties",
+        "actionDescription": "Creates/updates CRM properties and pipelines by brand/dealer",
+        "appDisplayName": "SIMPA-Application",
+        "actionCardContent": "Setup for {{marca}} / {{dealer}}",
+        "inputFieldLabels": {
+          "marca": "Brand",
+          "modelo": "Model",
+          "dealer": "Dealer",
+          "razon_social": "Legal Entity",
+          "tipo_proceso": "Process Type"
+        },
+        "inputFieldDescriptions": {
+          "marca": "Brand that drives property configuration. Required for 'Create/Update Model Properties', 'Create All Properties', and 'Create/Configure Business Pipeline' processes.",
+          "modelo": "Model to add/update in the properties. Only required for 'Create/Update Model Properties' process.",
+          "dealer": "Dealer that drives property configuration. Required for 'Create/Update Dealership Properties' and 'Create/Configure Business Pipeline' processes. Optional for 'Create All Properties'.",
+          "razon_social": "Legal entity configured with a secret to resolve tokens automatically. Required for all process types EXCEPT 'Create All Properties (Global)'. Leave empty for bulk model updates or global process.",
+          "tipo_proceso": "Select what should be configured"
+        },
+        "outputFieldLabels": {
+          "success": "Success",
+          "message": "Message",
+          "razonSocial": "Legal Entity",
+          "propertiesCreated": "Properties Created",
+          "propertiesSkipped": "Properties Skipped",
+          "propertiesUpdated": "Properties Updated",
+          "optionsAdded": "Options Added",
+          "tipoProceso": "Executed Process Type",
+          "updatedPropertiesList": "Updated Properties",
+          "optionDetails": "Option Details",
+          "pipelineName": "Pipeline Name",
+          "pipelineId": "Pipeline ID",
+          "pipelineStagesCount": "Pipeline Stages Count",
+          "bulkTotal": "Bulk Total",
+          "bulkProcesadas": "Bulk Processed",
+          "bulkExitosas": "Bulk Successful",
+          "bulkFallidas": "Bulk Failed",
+          "bulkErroresCount": "Bulk Errors Count",
+          "bulkErroresDetalle": "Bulk Errors Detail",
+          "bulkExitosasDetalle": "Bulk Successful Detail"
+        }
+      },
+      "es": {
+        "actionName": "Configurar Propiedades de Cuenta Externa",
+        "actionDescription": "Crea/actualiza propiedades del CRM y pipelines por marca/concesionario",
+        "appDisplayName": "SIMPA-Application",
+        "actionCardContent": "Configuración para {{marca}} / {{dealer}}",
+        "inputFieldLabels": {
+          "marca": "Marca",
+          "modelo": "Modelo",
+          "dealer": "Concesionario",
+          "razon_social": "Razón Social",
+          "tipo_proceso": "Tipo de Proceso"
+        },
+        "inputFieldDescriptions": {
+          "marca": "Marca que determina la configuración de propiedades. Requerida para 'Crear/Actualizar Propiedades de Modelos', 'Crear Todas las Propiedades' y 'Crear/Configurar Pipeline de Negocio'.",
+          "modelo": "Modelo a agregar/actualizar en las propiedades. Solo requerido para el proceso 'Crear/Actualizar Propiedades de Modelos'.",
+          "dealer": "Concesionario que determina la configuración de propiedades. Requerido para 'Crear/Actualizar Propiedades de Concesionarios' y 'Crear/Configurar Pipeline de Negocio'. Opcional para 'Crear Todas las Propiedades'.",
+          "razon_social": "Razón social configurada con un secreto para resolver tokens automáticamente. Requerida para todos los tipos de proceso EXCEPTO 'Crear Todas las Propiedades (Global)'. Dejar vacío para actualización masiva de modelos o proceso global.",
+          "tipo_proceso": "Selecciona qué se debe configurar"
+        },
+        "outputFieldLabels": {
+          "success": "Éxito",
+          "message": "Mensaje",
+          "razonSocial": "Razón Social",
+          "propertiesCreated": "Propiedades Creadas",
+          "propertiesSkipped": "Propiedades Omitidas",
+          "propertiesUpdated": "Propiedades Actualizadas",
+          "optionsAdded": "Opciones Agregadas",
+          "tipoProceso": "Tipo de Proceso Ejecutado",
+          "updatedPropertiesList": "Propiedades Actualizadas",
+          "optionDetails": "Detalle de Opciones",
+          "pipelineName": "Nombre del Pipeline",
+          "pipelineId": "ID del Pipeline",
+          "pipelineStagesCount": "Cantidad de Etapas del Pipeline",
+          "bulkTotal": "Total Bulk",
+          "bulkProcesadas": "Procesadas Bulk",
+          "bulkExitosas": "Exitosas Bulk",
+          "bulkFallidas": "Fallidas Bulk",
+          "bulkErroresCount": "Cantidad de Errores Bulk",
+          "bulkErroresDetalle": "Detalle de Errores Bulk",
+          "bulkExitosasDetalle": "Detalle de Exitosas Bulk"
+        }
+      }
+    },
+    "objectTypes": [
+      "CONTACT",
+      "DEAL",
+      "USER"
+    ],
+    "supportedClients": [
+      {
+        "client": "WORKFLOWS"
+      }
+    ],
+    "inputFields": [
+      {
+        "typeDefinition": {
+          "name": "tipo_proceso",
+          "type": "enumeration",
+          "fieldType": "select",
+          "options": [
+            {
+              "label": "Crear Todas las Propiedades (Primera Vez)",
+              "value": "todas_propiedades"
+            },
+            {
+              "label": "Actualizar Propiedades de Modelos (Nuevo Modelo)",
+              "value": "propiedades_modelos"
+            },
+            {
+              "label": "Actualizar Propiedades de Concesionarios (Nuevo Dealer)",
+              "value": "propiedades_concesionarios"
+            },
+            {
+              "label": "Crear/Configurar Pipeline de Negocio",
+              "value": "pipeline_negocio"
+            }
+          ]
+        },
+        "supportedValueTypes": [
+          "STATIC_VALUE"
+        ],
+        "isRequired": true
+      },
+      {
+        "typeDefinition": {
+          "name": "marca",
+          "type": "string",
+          "fieldType": "text"
+        },
+        "supportedValueTypes": [
+          "STATIC_VALUE"
+        ],
+        "isRequired": false
+      },
+      {
+        "typeDefinition": {
+          "name": "modelo",
+          "type": "string",
+          "fieldType": "text"
+        },
+        "supportedValueTypes": [
+          "STATIC_VALUE"
+        ],
+        "isRequired": false
+      },
+      {
+        "typeDefinition": {
+          "name": "dealer",
+          "type": "string",
+          "fieldType": "text"
+        },
+        "supportedValueTypes": [
+          "STATIC_VALUE"
+        ],
+        "isRequired": false
+      },
+      {
+        "typeDefinition": {
+          "name": "razon_social",
+          "type": "string",
+          "fieldType": "text"
+        },
+        "supportedValueTypes": [
+          "STATIC_VALUE"
+        ],
+        "isRequired": false
+      }
+    ],
+    "outputFields": [
+      {
+        "typeDefinition": {
+          "name": "razonSocial",
+          "type": "string",
+          "fieldType": "text"
+        }
+      },
+      {
+        "typeDefinition": {
+          "name": "success",
+          "type": "string",
+          "fieldType": "text"
+        }
+      },
+      {
+        "typeDefinition": {
+          "name": "message",
+          "type": "string",
+          "fieldType": "text"
+        }
+      },
+      {
+        "typeDefinition": {
+          "name": "propertiesCreated",
+          "type": "number",
+          "fieldType": "number"
+        }
+      },
+      {
+        "typeDefinition": {
+          "name": "propertiesSkipped",
+          "type": "number",
+          "fieldType": "number"
+        }
+      },
+      {
+        "typeDefinition": {
+          "name": "propertiesUpdated",
+          "type": "number",
+          "fieldType": "number"
+        }
+      },
+      {
+        "typeDefinition": {
+          "name": "optionsAdded",
+          "type": "number",
+          "fieldType": "number"
+        }
+      },
+      {
+        "typeDefinition": {
+          "name": "tipoProceso",
+          "type": "string",
+          "fieldType": "text"
+        }
+      },
+      {
+        "typeDefinition": {
+          "name": "updatedPropertiesList",
+          "type": "string",
+          "fieldType": "text"
+        }
+      },
+      {
+        "typeDefinition": {
+          "name": "optionDetails",
+          "type": "string",
+          "fieldType": "textarea"
+        }
+      },
+      {
+        "typeDefinition": {
+          "name": "pipelineName",
+          "type": "string",
+          "fieldType": "text"
+        }
+      },
+      {
+        "typeDefinition": {
+          "name": "pipelineId",
+          "type": "string",
+          "fieldType": "text"
+        }
+      },
+      {
+        "typeDefinition": {
+          "name": "pipelineStagesCount",
+          "type": "number",
+          "fieldType": "number"
+        }
+      },
+      {
+        "typeDefinition": {
+          "name": "bulkTotal",
+          "type": "number",
+          "fieldType": "number"
+        }
+      },
+      {
+        "typeDefinition": {
+          "name": "bulkProcesadas",
+          "type": "number",
+          "fieldType": "number"
+        }
+      },
+      {
+        "typeDefinition": {
+          "name": "bulkExitosas",
+          "type": "number",
+          "fieldType": "number"
+        }
+      },
+      {
+        "typeDefinition": {
+          "name": "bulkFallidas",
+          "type": "number",
+          "fieldType": "number"
+        }
+      },
+      {
+        "typeDefinition": {
+          "name": "bulkErroresCount",
+          "type": "number",
+          "fieldType": "number"
+        }
+      },
+      {
+        "typeDefinition": {
+          "name": "bulkErroresDetalle",
+          "type": "string",
+          "fieldType": "textarea"
+        }
+      },
+      {
+        "typeDefinition": {
+          "name": "bulkExitosasDetalle",
+          "type": "string",
+          "fieldType": "textarea"
+        }
+      }
+    ]
+  }
+}
