@@ -810,6 +810,18 @@ module.exports = (req, res) => {
                              </div>
                         </div>
 
+                        <!-- 4. Detected Configuration (Feedback) -->
+                        <div class="bg-white rounded-3xl shadow-card p-6 border border-gray-100" v-if="simDetectedProps && Object.keys(simDetectedProps).length > 0">
+                             <h3 class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-4 flex items-center gap-2"><i class="ph ph-eye"></i> Propiedades Detectadas (Configuración)</h3>
+                             <p class="text-[10px] text-gray-500 mb-3">Estas propiedades están configuradas para la Marca/Dealer seleccionados y se incluirán automáticamente.</p>
+                             <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+                                 <div v-for="(val, key) in simDetectedProps" class="bg-blue-50/50 border border-blue-100 rounded-lg p-2 flex flex-col">
+                                     <span class="text-[10px] font-bold text-blue-800 font-mono">{{ key }}</span>
+                                     <span class="text-[10px] text-blue-600 truncate" :title="val">{{ val }}</span>
+                                 </div>
+                             </div>
+                        </div>
+
                         <!-- Action -->
                         <div class="flex justify-end">
                              <button @click="runSimulation" :disabled="simLoading" class="bg-apple-action hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-xl shadow-lg hover:shadow-xl text-md transition-all transform active:scale-[0.98] w-full md:w-auto flex justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed">
@@ -1142,6 +1154,48 @@ module.exports = (req, res) => {
                 }
             }
             return [];
+            return [];
+        },
+        get simDetectedProps() {
+            // Frontend approximation of backend logic to show feedback
+            if (!this.simConfig.razonKey || !this.razonesSociales[this.simConfig.razonKey]) return {};
+            
+            const rs = this.razonesSociales[this.simConfig.razonKey];
+            const result = {};
+            const normalize = (s) => s ? s.toLowerCase().replace(/[^a-z0-9]/g, '') : '';
+            
+            if (rs.customProperties) {
+                // 1. Base
+                for (const k in rs.customProperties) {
+                    if (k !== 'default' && typeof rs.customProperties[k] !== 'object') result[k] = rs.customProperties[k];
+                }
+                // 2. Default
+                if (rs.customProperties.default) Object.assign(result, rs.customProperties.default);
+                
+                // 3. Global Overrides
+                if (rs.customProperties._overrides && this.simConfig.dealer) {
+                    const dKey = Object.keys(rs.customProperties._overrides).find(k => normalize(k) === normalize(this.simConfig.dealer));
+                    if (dKey) Object.assign(result, rs.customProperties._overrides[dKey]);
+                }
+                
+                // 4. Brand
+                if (this.simConfig.brand) {
+                    const bKey = Object.keys(rs.customProperties).find(k => normalize(k) === normalize(this.simConfig.brand));
+                    if (bKey && rs.customProperties[bKey]) {
+                        const bp = rs.customProperties[bKey];
+                        for (const k in bp) {
+                            if (k !== '_overrides' && typeof bp[k] !== 'object') result[k] = bp[k];
+                        }
+                        
+                        // 5. Brand Overrides
+                        if (bp._overrides && this.simConfig.dealer) {
+                             const bdKey = Object.keys(bp._overrides).find(k => normalize(k) === normalize(this.simConfig.dealer));
+                             if (bdKey) Object.assign(result, bp._overrides[bdKey]);
+                        }
+                    }
+                }
+            }
+            return result;
         },
         addSimProp() { this.simConfig.extras.push({key: '', value: ''}); },
         removeSimProp(idx) { this.simConfig.extras.splice(idx, 1); },
