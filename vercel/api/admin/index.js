@@ -104,7 +104,7 @@ module.exports = (req, res) => {
                                                         <div class="w-8 h-8 bg-black rounded-lg flex items-center justify-center text-white">
                                                             <i class="ph ph-command text-lg"></i>
                                                         </div>
-                                                        <h1 class="font-semibold text-lg tracking-tight text-black">SIMPA <span class="text-apple-400 font-normal">Connect</span></h1>
+                                                        <h1 class="font-semibold text-lg tracking-tight text-black">SIMPA <span class="text-apple-400 font-normal">Connect</span> <span class="text-[10px] bg-gray-100 text-gray-500 px-1.5 py-0.5 rounded border border-gray-200 ml-2 font-mono">v2.1</span></h1>
                                                     </div>
                                                     <div class="flex items-center gap-4">
                                                         <div v-if="unsavedChanges" class="flex items-center gap-2 px-3 py-1 bg-amber-50 text-amber-600 rounded-full text-xs font-medium border border-amber-100 animate-pulse">
