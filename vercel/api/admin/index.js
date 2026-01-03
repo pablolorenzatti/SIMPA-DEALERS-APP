@@ -688,18 +688,117 @@ module.exports = (req, res) => {
                 </div >
 
                 <div v-if="currentView === 'simulator'" class="h-full overflow-y-auto p-8 md:p-10">
-                    <div class="max-w-3xl mx-auto mt-10">
-                    <div class="bg-white rounded-3xl shadow-soft border border-gray-100 p-10">
-                        <h2 class="text-2xl font-bold text-black text-center mb-10">Simulador de Inferencia</h2>
-                        <div class="space-y-6 max-w-lg mx-auto">
-                            <input v-model="simDealer" class="w-full bg-gray-50 border-0 p-4 rounded-2xl text-lg focus:bg-white focus:ring-2 ring-blue-100" placeholder="Dealer Name (Input)">
-                            <input v-model="simBrand" class="w-full bg-gray-50 border-0 p-4 rounded-2xl text-lg focus:bg-white focus:ring-2 ring-blue-100" placeholder="Brand (Optional)">
-                            <button @click="runSimulation" class="w-full bg-apple-action text-white font-bold py-4 rounded-2xl shadow-lg text-lg">Ejecutar Prueba</button>
+    <div class="max-w-6xl mx-auto mt-6 space-y-6 pb-20">
+                    
+                        <div class="flex items-center justify-between">
+                            <h2 class="text-2xl font-bold text-black" >Simulador de Inferencia</h2>
+                             <div  v-if="simResult" class="text-xs font-mono bg-gray-100 px-2 py-1 rounded text-gray-500">Última ejecución: {{ formatTime(new Date().getTime()) }}</div>
                         </div>
-                        <div v-if="simResult" class="mt-10 bg-[#1e1e1e] rounded-2xl p-6 shadow-float relative">
-                            <pre class="text-green-400 font-mono text-xs overflow-x-auto">{{ JSON.stringify(simResult, null, 2) }}</pre>
+
+                        <!-- 1. Contexto -->
+                        <div class="bg-white rounded-3xl shadow-card p-6 border border-gray-100">
+                            <h3 class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-4 flex items-center gap-2"><i class="ph ph-buildings"></i> Contexto & Concesionario</h3>
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                <div class="space-y-2">
+                                    <label class="text-xs font-semibold text-gray-700 ml-1">Razón Social Ref.</label>
+                                    <select v-model="simConfig.razonKey" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:ring-2 ring-black/5 outline-none transition-all">
+                                        <option value="">-- Automático (Inferencia) --</option>
+                                        <option v-for="(rs, key) in razonesSociales" :value="key">{{ key }}</option>
+                                    </select>
+                                    <p class="text-[10px] text-gray-400 ml-1">Selecciona para filtrar Dealers/Marcas.</p>
+                                </div>
+                                <div class="space-y-2">
+                                    <label class="text-xs font-semibold text-gray-700 ml-1">Dealer Name</label>
+                                    <input v-model="simConfig.dealer" list="dealersList" placeholder="Ej: REVSA" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:ring-2 ring-black/5 outline-none transition-all">
+                                    <datalist id="dealersList"><option v-for="d in simDealersList" :value="d"></option></datalist>
+                                </div>
+                                <div class="space-y-2">
+                                    <label class="text-xs font-semibold text-gray-700 ml-1">Brand Name</label>
+                                    <input v-model="simConfig.brand" list="brandsList" placeholder="Ej: KTM" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:ring-2 ring-black/5 outline-none transition-all">
+                                    <datalist id="brandsList"><option v-for="b in simBrandsList" :value="b"></option></datalist>
+                                </div>
+                            </div>
                         </div>
-                    </div>
+
+                        <!-- 2. Contacto -->
+                        <div class="bg-white rounded-3xl shadow-card p-6 border border-gray-100">
+                             <h3 class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-4 flex items-center gap-2"><i class="ph ph-user"></i> Datos Contacto</h3>
+                             <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                 <input v-model="simConfig.firstname" placeholder="Nombre" class="bg-gray-50 border border-gray-200 rounded-xl px-3 py-2.5 text-sm outline-none focus:border-gray-300">
+                                 <input v-model="simConfig.lastname" placeholder="Apellido" class="bg-gray-50 border border-gray-200 rounded-xl px-3 py-2.5 text-sm outline-none focus:border-gray-300">
+                                 <input v-model="simConfig.email" placeholder="Email" class="bg-gray-50 border border-gray-200 rounded-xl px-3 py-2.5 text-sm outline-none focus:border-gray-300">
+                                 <input v-model="simConfig.phone" placeholder="Teléfono" class="bg-gray-50 border border-gray-200 rounded-xl px-3 py-2.5 text-sm outline-none focus:border-gray-300">
+                             </div>
+                        </div>
+
+                        <!-- 3. Extras -->
+                        <div class="bg-white rounded-3xl shadow-card p-6 border border-gray-100">
+                             <div class="flex justify-between items-center mb-4">
+                                <h3 class="text-xs font-bold text-gray-400 uppercase tracking-widest flex items-center gap-2"><i class="ph ph-list-plus"></i> Propiedades Adicionales</h3>
+                                <button @click="addSimProp" class="text-xs bg-black text-white px-3 py-1.5 rounded-lg flex items-center gap-1 font-bold hover:bg-gray-800 transition-colors shadow-sm"><i class="ph ph-plus"></i> Nueva Propiedad</button>
+                             </div>
+                             
+                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                 <div v-for="(prop, idx) in simConfig.extras" :key="idx" class="flex gap-2 bg-gray-50 p-2 rounded-xl group hover:bg-white hover:shadow-sm transition-all border border-transparent hover:border-gray-100">
+                                     <input v-model="prop.key" placeholder="Key (ej: pipeline)" class="w-1/3 bg-transparent border-b border-gray-200 px-2 py-1 text-xs font-mono outline-none focus:border-black">
+                                     <input v-model="prop.value" placeholder="Value" class="flex-1 bg-transparent border-b border-gray-200 px-2 py-1 text-xs outline-none focus:border-black">
+                                     <button @click="removeSimProp(idx)" class="text-gray-300 hover:text-red-500 px-2"><i class="ph ph-trash"></i></button>
+                                 </div>
+                             </div>
+                             <div v-if="simConfig.extras.length === 0" class="text-center py-4 border-2 border-dashed border-gray-100 rounded-xl">
+                                <p class="text-xs text-gray-400">No hay propiedades extra definidas.</p>
+                             </div>
+                        </div>
+
+                        <!-- Action -->
+                        <div class="flex justify-end">
+                             <button @click="runSimulation" :disabled="simLoading" class="bg-apple-action hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-xl shadow-lg hover:shadow-xl text-md transition-all transform active:scale-[0.98] w-full md:w-auto flex justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed">
+                                <i v-if="!simLoading" class="ph ph-play-circle text-xl"></i>
+                                <i v-else class="ph ph-spinner animate-spin text-xl"></i>
+                                {{ simLoading ? 'Simulando...' : 'Ejecutar Simulación' }}
+                             </button>
+                        </div>
+
+                        <!-- Result -->
+                        <div v-if="simResult" class="bg-[#1e1e1e] rounded-3xl p-6 shadow-float border border-gray-800 animate-fade-in-up">
+                            
+                            <!-- Error Check -->
+                            <div v-if="simResult.error" class="bg-red-900/20 border border-red-900/50 p-4 rounded-xl mb-4 flex gap-3 text-red-400">
+                                <i class="ph ph-warning-circle text-xl mt-0.5"></i>
+                                <div>
+                                    <h3 class="font-bold text-sm">Error en Simulación</h3>
+                                    <p class="text-xs mt-1 opacity-80">{{ simResult.error }}</p>
+                                </div>
+                            </div>
+
+                            <div v-else>
+                                <div class="flex justify-between items-center mb-4 border-b border-gray-700 pb-2">
+                                    <h3 class="text-sm font-bold text-gray-300 flex items-center gap-2"><i class="ph ph-code"></i> Resultado de Inferencia</h3>
+                                    <span v-if="simResult.success" class="text-[10px] bg-green-500/20 text-green-400 px-2 py-0.5 rounded uppercase font-bold">Success</span>
+                                </div>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <div>
+                                        <div class="flex justify-between items-center mb-2">
+                                            <h4 class="text-[10px] text-gray-500 uppercase font-bold">Propiedades Calculadas (HubSpot Payload)</h4>
+                                            <button @click="navigator.clipboard.writeText(JSON.stringify(simResult.properties,null,2))" class="text-[10px] text-blue-400 hover:text-blue-300 flex items-center gap-1"><i class="ph ph-copy"></i> Copiar</button>
+                                        </div>
+                                        <pre class="bg-black/30 rounded-xl p-4 text-green-400 font-mono text-[10px] overflow-x-auto h-64 border border-gray-800 scrollbar-thin">{{ JSON.stringify(simResult.properties, null, 2) }}</pre>
+                                    </div>
+                                    <div class="space-y-4">
+                                         <div>
+                                            <h4 class="text-[10px] text-gray-500 uppercase font-bold mb-2">Log de Inferencia</h4>
+                                            <div class="bg-black/30 rounded-xl p-4 text-blue-300 font-mono text-[10px] overflow-x-auto h-32 border border-gray-800">
+                                                <div class="mb-1"><span class="text-gray-500">Razon Social:</span> {{ simResult.inference?.razonSocial || 'None' }}</div>
+                                                <div class="mb-1"><span class="text-gray-500">Method:</span> {{ simResult.inference?.method }}</div>
+                                                <div class="mb-1"><span class="text-gray-500">Token Env:</span> {{ simResult.env?.tokenEnv }}</div>
+                                                <div class="mb-1"><span class="text-gray-500">Pipeline:</span> {{ simResult.inference?.pipelineInfo?.pipeline }} ({{ simResult.inference?.pipelineInfo?.stage }})</div>
+                                            </div>
+                                         </div>
+                                         <button @click="console.log(simResult)" class="text-[10px] text-gray-500 hover:text-white underline w-full text-left">Ver objeto completo en consola (F12)</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -940,7 +1039,36 @@ module.exports = (req, res) => {
         pendingNewKey: '',
         newModelInput: '',
         newDealerInput: '',
-        simDealer: '', simBrand: '', simResult: null,
+        simConfig: {
+            razonKey: '',
+            dealer: '', 
+            brand: '',
+            firstname: 'Test',
+            lastname: 'Lead',
+            email: 'test@example.com',
+            phone: '555-0123',
+            extras: []
+        },
+        simResult: null,
+        simLoading: false,
+        
+        // Helpers for Simulator Selects
+        get simDealersList() {
+            if (this.simConfig.razonKey && this.razonesSociales[this.simConfig.razonKey]) {
+                return this.razonesSociales[this.simConfig.razonKey].dealers || [];
+            }
+            // If no Razon selected, flatten all dealers? Or empty? empty allows manual input focused workflow
+            return [];
+        },
+        get simBrandsList() {
+            if (this.simConfig.razonKey && this.razonesSociales[this.simConfig.razonKey]) {
+                return this.razonesSociales[this.simConfig.razonKey].brands || [];
+            }
+            return [];
+        },
+        addSimProp() { this.simConfig.extras.push({key: '', value: ''}); },
+        removeSimProp(idx) { this.simConfig.extras.splice(idx, 1); },
+        
         showErrors: true,
         showCustomPropsHelp: false,
         propertiesStatus: null,
@@ -1954,11 +2082,37 @@ module.exports = (req, res) => {
             }
         },
         async runSimulation() {
-                     try {
-                        const res = await fetch('/api/admin/simulate', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({dealerName: this.simDealer, brandName: this.simBrand }) });
-        this.simResult = await res.json();
-                     } catch(e) {this.simResult = { error: e.message }; }
-                }
+             this.simResult = null;
+             this.simLoading = true;
+             try {
+                const payload = {
+                    dealerName: this.simConfig.dealer,
+                    brand: this.simConfig.brand,
+                    firstname: this.simConfig.firstname,
+                    lastname: this.simConfig.lastname,
+                    email: this.simConfig.email,
+                    phone: this.simConfig.phone
+                };
+                
+                // Add extras
+                this.simConfig.extras.forEach(p => {
+                    if(p.key) payload[p.key] = p.value;
+                });
+                
+                const res = await fetch('/api/admin/api?action=simulate', {
+                    method: 'POST', 
+                    headers: {'Content-Type': 'application/json'}, 
+                    body: JSON.stringify(payload) 
+                });
+                
+                if (!res.ok) throw new Error('Error ' + res.status);
+                this.simResult = await res.json();
+             } catch(e) {
+                this.simResult = { error: e.message }; 
+             } finally {
+                this.simLoading = false;
+             }
+        }
             }
         }
     </script>
