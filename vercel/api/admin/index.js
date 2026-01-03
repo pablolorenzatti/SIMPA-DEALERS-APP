@@ -1832,7 +1832,7 @@ module.exports = (req, res) => {
                 });
 
                 this.chartsLoading = false;
-                console.log('[Charts] Gráficos renderizados exitosamente');
+                console.log('[Charts] Gráficos V2.1 OK');
             } catch(error) {
                 console.error('[Charts] Error rendering charts:', error);
                 this.chartsLoading = false;
