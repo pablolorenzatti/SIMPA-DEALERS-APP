@@ -107,8 +107,23 @@ module.exports = async (req, res) => {
                 // 1. Load Config
                 const razonesSociales = await ConfigService.getRazonesSociales();
 
-                // 2. Infer Razon Social
-                const razonInfo = LeadProcessor.inferRazonSocial(razonesSociales, dealerName, brand);
+                let razonInfo;
+                // If user manually selected a Razon Social in simulator, try to use it
+                if (leadData.razonSocial && razonesSociales[leadData.razonSocial]) {
+                    razonInfo = {
+                        razonSocial: leadData.razonSocial,
+                        method: 'manual_override',
+                        confidence: 'manual'
+                    };
+                    // Warning if inference would have been different? 
+                    const inferred = LeadProcessor.inferRazonSocial(razonesSociales, dealerName, brand);
+                    if (inferred.razonSocial !== leadData.razonSocial) {
+                        razonInfo.inferenceWarning = `Manual selection differs from inference (${inferred.razonSocial || 'None'})`;
+                    }
+                } else {
+                    // 2. Infer Razon Social (Default behavior)
+                    razonInfo = LeadProcessor.inferRazonSocial(razonesSociales, dealerName, brand);
+                }
 
                 let result = {
                     success: true,

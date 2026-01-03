@@ -2086,6 +2086,7 @@ module.exports = (req, res) => {
              this.simLoading = true;
              try {
                 const payload = {
+                    razonSocial: this.simConfig.razonKey,
                     dealerName: this.simConfig.dealer,
                     brand: this.simConfig.brand,
                     firstname: this.simConfig.firstname,
