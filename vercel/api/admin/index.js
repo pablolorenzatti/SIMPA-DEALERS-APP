@@ -722,12 +722,40 @@ module.exports = (req, res) => {
 
                         <!-- 2. Contacto -->
                         <div class="bg-white rounded-3xl shadow-card p-6 border border-gray-100">
-                             <h3 class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-4 flex items-center gap-2"><i class="ph ph-user"></i> Datos Contacto</h3>
-                             <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                             <h3 class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-4 flex items-center gap-2"><i class="ph ph-user"></i> Datos Contacto & Interés</h3>
+                             <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
                                  <input v-model="simConfig.firstname" placeholder="Nombre" class="bg-gray-50 border border-gray-200 rounded-xl px-3 py-2.5 text-sm outline-none focus:border-gray-300">
                                  <input v-model="simConfig.lastname" placeholder="Apellido" class="bg-gray-50 border border-gray-200 rounded-xl px-3 py-2.5 text-sm outline-none focus:border-gray-300">
                                  <input v-model="simConfig.email" placeholder="Email" class="bg-gray-50 border border-gray-200 rounded-xl px-3 py-2.5 text-sm outline-none focus:border-gray-300">
                                  <input v-model="simConfig.phone" placeholder="Teléfono" class="bg-gray-50 border border-gray-200 rounded-xl px-3 py-2.5 text-sm outline-none focus:border-gray-300">
+                             </div>
+                             <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
+                                <select v-model="simConfig.inquiry_reason" class="bg-gray-50 border border-gray-200 rounded-xl px-3 py-2.5 text-sm outline-none focus:border-gray-300 text-gray-600">
+                                    <option value="" disabled selected>Motivo Consulta</option>
+                                    <option value="Quiero más información de producto">Info Producto</option>
+                                    <option value="¡Quiero reservar la moto ya!">Reservar ya</option>
+                                    <option value="Quiero reservar un Test Ride">Test Ride</option>
+                                    <option value="Preventa">Preventa</option>
+                                    <option value="Info Financiación">Financiación</option>
+                                    <option value="Posventa">Posventa</option>
+                                    <option value="Otro">Otro</option>
+                                </select>
+                                <select v-model="simConfig.time_to_buy" class="bg-gray-50 border border-gray-200 rounded-xl px-3 py-2.5 text-sm outline-none focus:border-gray-300 text-gray-600">
+                                    <option value="" disabled selected>Tiempo de Compra</option>
+                                    <option value="Inmediato (30 días)">30 días</option>
+                                    <option value="Corto plazo (60 días)">60 días</option>
+                                    <option value="Medio plazo (90 días)">90 días</option>
+                                    <option value="Largo plazo (180 días)">180 días</option>
+                                </select>
+                                <select v-model="simConfig.financing_type" class="bg-gray-50 border border-gray-200 rounded-xl px-3 py-2.5 text-sm outline-none focus:border-gray-300 text-gray-600">
+                                    <option value="" disabled selected>Financiación</option>
+                                    <option value="Financiación parcial">Parcial</option>
+                                    <option value="Financiación total">Total</option>
+                                    <option value="Pago de contado">Contado</option>
+                                    <option value="Aún no me decido">Indeciso</option>
+                                </select>
+                                <input v-model="simConfig.como_queres_ser_contactado_" placeholder="Pref. Contacto (ej: Whatsapp)" class="bg-gray-50 border border-gray-200 rounded-xl px-3 py-2.5 text-sm outline-none focus:border-gray-300">
+                                <input v-model="simConfig.message" placeholder="Mensaje / Comentario" class="col-span-2 bg-gray-50 border border-gray-200 rounded-xl px-3 py-2.5 text-sm outline-none focus:border-gray-300">
                              </div>
                         </div>
 
@@ -1047,6 +1075,11 @@ module.exports = (req, res) => {
             lastname: 'Lead',
             email: 'test@example.com',
             phone: '555-0123',
+            inquiry_reason: '',
+            time_to_buy: '',
+            financing_type: '',
+            message: '',
+            como_queres_ser_contactado_: '',
             extras: []
         },
         simResult: null,
@@ -2092,7 +2125,12 @@ module.exports = (req, res) => {
                     firstname: this.simConfig.firstname,
                     lastname: this.simConfig.lastname,
                     email: this.simConfig.email,
-                    phone: this.simConfig.phone
+                    phone: this.simConfig.phone,
+                    inquiry_reason: this.simConfig.inquiry_reason,
+                    time_to_buy: this.simConfig.time_to_buy,
+                    financing_type: this.simConfig.financing_type,
+                    message: this.simConfig.message,
+                    como_queres_ser_contactado_: this.simConfig.como_queres_ser_contactado_
                 };
                 
                 // Add extras

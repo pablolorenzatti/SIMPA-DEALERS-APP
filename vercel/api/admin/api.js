@@ -171,8 +171,16 @@ module.exports = async (req, res) => {
                     // Add standard mappings if they were part of the input
                     if (email) result.properties.email = email;
                     if (phone) result.properties.phone = phone;
-                    if (dealerName) result.properties.dealer_name = dealerName; // Assuming mapped
-                    if (brand) result.properties.brand_name = brand; // Assuming mapped
+                    if (dealerName) result.properties.dealer_name = dealerName;
+                    if (brand) result.properties.brand_name = brand;
+
+                    // Add global standard fields
+                    if (leadData.inquiry_reason) result.properties.inquiry_reason = leadData.inquiry_reason;
+                    if (leadData.time_to_buy) result.properties.time_to_buy = leadData.time_to_buy;
+                    if (leadData.financing_type) result.properties.financing_type = leadData.financing_type;
+                    if (leadData.message) result.properties.message = leadData.message;
+                    if (leadData.como_queres_ser_contactado_) result.properties.como_queres_ser_contactado_ = leadData.como_queres_ser_contactado_;
+
                 } else {
                     result.logs.push({ level: 'warn', message: 'Could not infer Razón Social. No properties calculated.' });
                 }
