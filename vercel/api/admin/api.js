@@ -181,6 +181,21 @@ module.exports = async (req, res) => {
                     if (leadData.message) result.properties.message = leadData.message;
                     if (leadData.como_queres_ser_contactado_) result.properties.como_queres_ser_contactado_ = leadData.como_queres_ser_contactado_;
 
+                    // Map Model
+                    if (leadData.modelo) {
+                        result.properties.modelo_simpa = leadData.modelo;
+                        // Also try mapping dynamic brand model property if brand is known? e.g. modelo_ktm
+                        // For now base property is modelo_simpa
+                        if (brand) {
+                            const safeBrand = LeadProcessor.normalizeKey(brand);
+                            // Heuristic to create property name like "modelo_royal_enfield"
+                            // result.properties[`modelo_${safeBrand}`] = leadData.modelo; 
+                        }
+                    }
+
+                    if (leadData.motivo_de_perdida) result.properties.motivo_de_perdida = leadData.motivo_de_perdida;
+                    if (leadData.otro_motivo_de_perdida) result.properties.otro_motivo_de_perdida = leadData.otro_motivo_de_perdida;
+
                 } else {
                     result.logs.push({ level: 'warn', message: 'Could not infer Razón Social. No properties calculated.' });
                 }

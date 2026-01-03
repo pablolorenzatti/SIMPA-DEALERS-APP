@@ -755,7 +755,39 @@ module.exports = (req, res) => {
                                     <option value="Aún no me decido">Indeciso</option>
                                 </select>
                                 <input v-model="simConfig.como_queres_ser_contactado_" placeholder="Pref. Contacto (ej: Whatsapp)" class="bg-gray-50 border border-gray-200 rounded-xl px-3 py-2.5 text-sm outline-none focus:border-gray-300">
-                                <input v-model="simConfig.message" placeholder="Mensaje / Comentario" class="col-span-2 bg-gray-50 border border-gray-200 rounded-xl px-3 py-2.5 text-sm outline-none focus:border-gray-300">
+                             </div>
+                             
+                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4 pt-4 border-t border-gray-50">
+                                <div class="space-y-1">
+                                    <label class="text-xs font-semibold text-gray-700 ml-1">Modelo de Interés</label>
+                                    <input v-model="simConfig.model" list="simModelsList" placeholder="Ej: Himalayan 411" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:ring-2 ring-black/5 outline-none transition-all">
+                                    <datalist id="simModelsList"><option v-for="m in simModelsList" :value="m"></option></datalist>
+                                </div>
+                                <div class="space-y-1">
+                                    <label class="text-xs font-semibold text-gray-700 ml-1">Mensaje / Comentario</label>
+                                    <input v-model="simConfig.message" placeholder="Mensaje del cliente..." class="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2.5 text-sm outline-none focus:border-gray-300">
+                                </div>
+                             </div>
+
+                             <div class="mt-4 pt-2 border-t border-gray-50">
+                                <details class="cursor-pointer group">
+                                    <summary class="text-xs font-bold text-gray-400 uppercase tracking-widest flex items-center gap-2 list-none hover:text-gray-600 transition-colors">
+                                        <i class="ph ph-caret-right group-open:rotate-90 transition-transform"></i> Campos Avanzados (Pérdida/Otros)
+                                    </summary>
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-3 pl-4">
+                                        <select v-model="simConfig.motivo_de_perdida" class="bg-gray-50 border border-gray-200 rounded-xl px-3 py-2.5 text-sm outline-none focus:border-gray-300 text-gray-600">
+                                            <option value="" disabled selected>Motivo de Pérdida</option>
+                                            <option value="Contactar más adelante">Contactar más adelante</option>
+                                            <option value="Compré otra marca">Compré otra marca</option>
+                                            <option value="Financiación">Financiación</option>
+                                            <option value="Precio">Precio</option>
+                                            <option value="No es el momento">No es el momento</option>
+                                            <option value="Datos incorrectos">Datos incorrectos</option>
+                                            <option value="Otro">Otro</option>
+                                        </select>
+                                        <input v-model="simConfig.otro_motivo_de_perdida" placeholder="Otro motivo..." class="bg-gray-50 border border-gray-200 rounded-xl px-3 py-2.5 text-sm outline-none focus:border-gray-300">
+                                    </div>
+                                </details>
                              </div>
                         </div>
 
@@ -1080,6 +1112,9 @@ module.exports = (req, res) => {
             financing_type: '',
             message: '',
             como_queres_ser_contactado_: '',
+            model: '',
+            motivo_de_perdida: '',
+            otro_motivo_de_perdida: '',
             extras: []
         },
         simResult: null,
@@ -1096,6 +1131,15 @@ module.exports = (req, res) => {
         get simBrandsList() {
             if (this.simConfig.razonKey && this.razonesSociales[this.simConfig.razonKey]) {
                 return this.razonesSociales[this.simConfig.razonKey].brands || [];
+            }
+            return [];
+        },
+        get simModelsList() {
+            if (this.simConfig.brand) {
+                const brandKey = Object.keys(this.modelsByBrand).find(k => k.toLowerCase() === this.simConfig.brand.toLowerCase());
+                if (brandKey && this.modelsByBrand[brandKey]) {
+                    return this.modelsByBrand[brandKey].models || [];
+                }
             }
             return [];
         },
@@ -2130,7 +2174,10 @@ module.exports = (req, res) => {
                     time_to_buy: this.simConfig.time_to_buy,
                     financing_type: this.simConfig.financing_type,
                     message: this.simConfig.message,
-                    como_queres_ser_contactado_: this.simConfig.como_queres_ser_contactado_
+                    como_queres_ser_contactado_: this.simConfig.como_queres_ser_contactado_,
+                    modelo: this.simConfig.model,
+                    motivo_de_perdida: this.simConfig.motivo_de_perdida,
+                    otro_motivo_de_perdida: this.simConfig.otro_motivo_de_perdida
                 };
                 
                 // Add extras
