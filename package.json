@@ -7,6 +7,13 @@
         "sync-global": "node scripts/sync-global-properties.js"
     },
     "dependencies": {
-        "@hubspot/api-client": "^10.0.0"
+        "@hubspot/api-client": "^10.0.0",
+        "@upstash/redis": "^1.30.0",
+        "@vercel/kv": "^0.2.3",
+        "axios": "^1.13.2",
+        "body-parser": "^2.2.0",
+        "cookie": "^1.1.1",
+        "express": "^5.1.0",
+        "jsonwebtoken": "^9.0.3"
     }
 }
