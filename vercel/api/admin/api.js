@@ -61,6 +61,41 @@ module.exports = async (req, res) => {
             return res.json({ razonesSociales, modelsByBrand });
         }
 
+        // --- RESET CONFIG FROM FILE ---
+        if (action === 'reset-config') {
+            if (req.method === 'POST') {
+                const razonesLocal = await ConfigService.getRazonesSocialesLocal();
+                const modelsLocal = await ConfigService.getModelsByBrandLocal();
+
+                await ConfigService.saveRazonesSociales(razonesLocal);
+                await ConfigService.saveModelsByBrand(modelsLocal);
+
+                return res.json({ success: true, message: 'Configuration reset to local file defaults' });
+            }
+            return res.status(405).json({ error: 'Method not allowed' });
+        }
+
+        // --- PROPERTY HEALTH CHECK ---
+        if (action === 'check-properties') {
+            if (req.method === 'POST') {
+                const { razonSocial } = req.body;
+                if (!razonSocial) return res.status(400).json({ success: false, error: 'razonSocial is required' });
+                const result = await PropertyMonitorService.getPropertiesStatus(razonSocial);
+                return res.json(result);
+            }
+            return res.status(405).json({ error: 'Method not allowed' });
+        }
+
+        if (action === 'create-property') {
+            if (req.method === 'POST') {
+                const { razonSocial, propertyName, objectType } = req.body;
+                if (!razonSocial || !propertyName || !objectType) return res.status(400).json({ success: false, error: 'Missing parameters' });
+                const result = await PropertyMonitorService.createMissingProperty(razonSocial, propertyName, objectType);
+                return res.json(result);
+            }
+            return res.status(405).json({ error: 'Method not allowed' });
+        }
+
         // --- SIMULATOR ---
         if (action === 'simulate') {
             // Logic from removed simulate.js would go here if complex, 

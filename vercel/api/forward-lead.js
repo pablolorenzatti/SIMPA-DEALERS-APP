@@ -138,6 +138,7 @@ module.exports = async (req, res) => {
     const razonSocialInput = sanitize(inputFields.razon_social);
     const dealerNameInput = sanitize(inputFields.dealer_name);
     const marca = sanitize(inputFields.contact_brand);
+    const comoQueresSerContactado = sanitize(inputFields.como_queres_ser_contactado_);
 
     // Assign to analytics variable
     dealerName = dealerNameInput || 'Unknown';
@@ -344,7 +345,9 @@ module.exports = async (req, res) => {
           lastname: sanitizeName(contactData.lastname),
           email: contactData.email,
           phone: contactData.phone,
-          city: contactData.city
+          phone: contactData.phone,
+          city: contactData.city,
+          como_queres_ser_contactado_: comoQueresSerContactado
         };
 
         // Agregar ID de contacto SIMPA si está disponible
@@ -359,15 +362,42 @@ module.exports = async (req, res) => {
         //   contactProperties.hs_lead_status = 'NEW';
         // }
 
-        const newContact = await hubspotClient.crm.contacts.basicApi.create({
-          properties: contactProperties,
-          associations: []
-        });
+        let newContact;
+        try {
+          newContact = await hubspotClient.crm.contacts.basicApi.create({
+            properties: contactProperties,
+            associations: []
+          });
+        } catch (createError) {
+          // Detección de error de límite de contactos
+          const errorMsg = createError.message || '';
+          const errorBody = createError.body ? JSON.stringify(createError.body) : '';
+
+          if (errorMsg.includes('exceeded the limit') || errorBody.includes('exceeded the limit') ||
+            errorMsg.includes('limit exceeded') || errorBody.includes('limit exceeded')) {
+
+            console.warn(`[forward-lead] ⚠️ Se alcanzó el límite de contactos. Reintentando como NO-MARKETING (hs_marketable_status=false)...`);
+            if (typeof logStep !== 'undefined') logStep('Contact Limit Hit - Retrying as Non-Marketing');
+
+            // Agregar propiedad para evitar que cuente como contacto de marketing
+            contactProperties.hs_marketable_status = 'false';
+
+            // Reintentar creación
+            newContact = await hubspotClient.crm.contacts.basicApi.create({
+              properties: contactProperties,
+              associations: []
+            });
+            console.log(`[forward-lead] ✅ Contacto creado exitosamente en segundo intento (Non-Marketing).`);
+          } else {
+            // Si no es error de límite, relanzar el error original
+            throw createError;
+          }
+        }
 
         contactId = newContact.id;
         contactAction = 'created';
-        logStep('Contact Created', { contactId });
-        console.log(`[forward - lead] ✅ Contacto creado exitosamente.ID: ${contactId} `);
+        logStep('Contact Created', { contactId, retry: contactProperties.hs_marketable_status === 'false' });
+        console.log(`[forward-lead] ✅ Contacto creado exitosamente.ID: ${contactId} `);
       } else {
         // Actualizar contacto existente
         console.log(`[forward - lead] Actualizando contacto existente...`);
@@ -376,6 +406,7 @@ module.exports = async (req, res) => {
         if (contactData.lastname) updateProperties.lastname = contactData.lastname;
         if (contactData.phone) updateProperties.phone = contactData.phone;
         if (contactData.city) updateProperties.city = contactData.city;
+        if (comoQueresSerContactado) updateProperties.como_queres_ser_contactado_ = comoQueresSerContactado;
 
         // Agregar o actualizar ID de contacto SIMPA si está disponible
         if (originContactId) {
@@ -409,7 +440,12 @@ module.exports = async (req, res) => {
         }
       }
 
-      throw new Error(`Error procesando contacto: ${contactErrorDetails} `);
+      // NO lanzamos error para permitir que se cree el negocio con la data de respaldo
+      console.warn(`[forward-lead] ⚠️ Continuando con creación de Deal a pesar del error de contacto: ${contactErrorDetails}`);
+      if (typeof logStep !== 'undefined') logStep('Contact Creation Failed - Continuing', { error: contactErrorDetails });
+
+      // Asegurar que contactId sea null
+      contactId = null;
     }
 
     // 2. Crear deal asociado al contacto
@@ -450,7 +486,7 @@ module.exports = async (req, res) => {
 
       // Aplicar propiedades personalizadas usando LeadProcessor
       console.log(`[forward - lead] 🔍 Calculando Propiedades Personalizadas...`);
-      const customPropsCalculated = LeadProcessor.determineCustomProperties(rsConfig, marca);
+      const customPropsCalculated = LeadProcessor.determineCustomProperties(rsConfig, marca, dealerName);
 
       if (Object.keys(customPropsCalculated).length > 0) {
         console.log(`[forward - lead] 📋 Propiedades personalizadas calculadas: `, JSON.stringify(customPropsCalculated));
@@ -636,21 +672,33 @@ module.exports = async (req, res) => {
         }
       }
 
-      // Crear el deal con asociación al contacto
-      console.log(`[forward-lead] Creando deal con asociación al contacto ${contactId}...`);
+      // Preparar backup de info de contacto si no hay ID (porque falló creación o límite alcanzado)
+      if (!contactId) {
+        const contactInfoParts = [];
+        if (contactData.firstname || contactData.lastname) contactInfoParts.push(`Nombre: ${contactData.firstname} ${contactData.lastname}`);
+        if (contactData.email) contactInfoParts.push(`Email: ${contactData.email}`);
+        if (contactData.phone) contactInfoParts.push(`Teléfono: ${contactData.phone}`);
+        if (contactData.city) contactInfoParts.push(`Ciudad: ${contactData.city}`);
+        if (originContactId) contactInfoParts.push(`ID SIMPA: ${originContactId}`);
+
+        dealProperties.simpa_contact_info = contactInfoParts.join('\n');
+        console.log('[forward-lead] ⚠️ Agregando info de contacto a dealProperties (simpa_contact_info) porque falló la creación del contacto');
+      }
+
+      // Preparar asociaciones condicionales
+      const associations = [];
+      if (contactId) {
+        associations.push({
+          to: { id: contactId },
+          types: [{ associationCategory: 'HUBSPOT_DEFINED', associationTypeId: 3 }]
+        });
+      }
+
+      // Crear el deal
+      console.log(`[forward-lead] Creando deal... (Asociación contacto: ${contactId ? 'SI' : 'NO'})`);
       const newDeal = await hubspotClient.crm.deals.basicApi.create({
         properties: dealProperties,
-        associations: [
-          {
-            to: { id: contactId },
-            types: [
-              {
-                associationCategory: 'HUBSPOT_DEFINED',
-                associationTypeId: 3 // Contact to Deal association
-              }
-            ]
-          }
-        ]
+        associations: associations
       });
 
       dealId = newDeal.id;

@@ -103,6 +103,24 @@ module.exports = {
             "groupName": "contactinformation",
             "type": "string",
             "hasVariableOptions": false
+        },
+        {
+            "name": "simpa_contact_info",
+            "description": "Información de respaldo del contacto (cuando falla creación)",
+            "label": "SIMPA Contact Backup",
+            "groupName": "dealinformation",
+            "type": "string",
+            "fieldType": "richtext",
+            "hasVariableOptions": false,
+            "targetObjects": ["deal"]
+        },
+        {
+            "name": "como_queres_ser_contactado_",
+            "description": "Preferencia de contacto del cliente",
+            "label": "¿Cómo querés ser contactado?",
+            "groupName": "contactinformation",
+            "type": "string",
+            "hasVariableOptions": false
         }
     ],
     "optionsConfig": {
@@ -416,103 +434,6 @@ module.exports = {
                 "VESPA STORE NEUQUEN"
             ]
         },
-        "concesionarios": {
-            "CFMOTO ROSARIO": ["CFMOTO ROSARIO"],
-            "KTM BARILOCHE": ["KTM BARILOCHE"],
-            "KTM COMODORO RIVADAVIA": ["KTM COMODORO RIVADAVIA"],
-            "KTM CORDOBA": ["KTM CORDOBA"],
-            "KTM ENTRE RIOS": ["KTM ENTRE RIOS"],
-            "KTM FRANCISCO ALVAREZ": ["KTM FRANCISCO ALVAREZ"],
-            "KTM LA LUCILA": ["KTM LA LUCILA"],
-            "KTM LA PLATA": ["KTM LA PLATA"],
-            "KTM LANUS": ["KTM LANUS"],
-            "KTM MAR DEL PLATA": ["KTM MAR DEL PLATA"],
-            "KTM MENDOZA": ["KTM MENDOZA"],
-            "KTM NEUQUEN": ["KTM NEUQUEN"],
-            "KTM PALERMO": ["KTM PALERMO"],
-            "KTM PILAR": ["KTM PILAR"],
-            "KTM PINAMAR": ["KTM PINAMAR"],
-            "KTM PUERTO MADERO": ["KTM PUERTO MADERO"],
-            "KTM QUILMES": ["KTM QUILMES"],
-            "KTM RESISTENCIA": ["KTM RESISTENCIA"],
-            "KTM ROSARIO": ["KTM ROSARIO"],
-            "KTM SALTA": ["KTM SALTA"],
-            "KTM SAN JUAN": ["KTM SAN JUAN"],
-            "KTM TUCUMAN": ["KTM TUCUMAN"],
-            "KTM URQUIZA": ["KTM URQUIZA"],
-            "KTM VILLA GESELL": ["KTM VILLA GESELL"],
-            "KTM VILLA MARIA": ["KTM VILLA MARIA"],
-            "MOTO MORINI CORRIENTES": ["MOTO MORINI CORRIENTES"],
-            "MOTO MORINI LELOIR": ["MOTO MORINI LELOIR"],
-            "MOTO MORINI NEUQUEN": ["MOTO MORINI NEUQUEN"],
-            "MOTO MORINI PILAR": ["MOTO MORINI PILAR"],
-            "MOTO MORINI PUERTO MADERO": ["MOTO MORINI PUERTO MADERO"],
-            "MOTO MORINI QUILMES": ["MOTO MORINI QUILMES"],
-            "MOTO MORINI ROSARIO": ["MOTO MORINI ROSARIO"],
-            "MOTO MORINI SALTA": ["MOTO MORINI SALTA"],
-            "MOTO MORINI VICENTE LOPEZ": ["MOTO MORINI VICENTE LOPEZ"],
-            "MOTOMORINI CORDOBA": ["MOTOMORINI CORDOBA"],
-            "MOTOMORINI MENDOZA": ["MOTOMORINI MENDOZA"],
-            "MOTOMORINI RIO CUARTO": ["MOTOMORINI RIO CUARTO"],
-            "MOTOMORINI TUCUMAN": ["MOTOMORINI TUCUMAN"],
-            "MOTOPLEX CHACO": ["MOTOPLEX CHACO"],
-            "MOTOPLEX CORDOBA": ["MOTOPLEX CORDOBA"],
-            "MOTOPLEX DEVOTO": ["MOTOPLEX DEVOTO"],
-            "MOTOPLEX LELOIR": ["MOTOPLEX LELOIR"],
-            "MOTOPLEX MENDOZA": ["MOTOPLEX MENDOZA"],
-            "MOTOPLEX PALERMO": ["MOTOPLEX PALERMO"],
-            "MOTOPLEX PUERTO MADERO": ["MOTOPLEX PUERTO MADERO"],
-            "MOTOPLEX QUILMES": ["MOTOPLEX QUILMES"],
-            "MOTOPLEX ROSARIO": ["MOTOPLEX ROSARIO"],
-            "MOTOPLEX SALTA": ["MOTOPLEX SALTA"],
-            "MOTOPLEX SAN ISIDRO": ["MOTOPLEX SAN ISIDRO"],
-            "MOTOPLEX TUCUMAN": ["MOTOPLEX TUCUMAN"],
-            "QJ BELGRANO": ["QJ BELGRANO"],
-            "QJ CATAMARCA": ["QJ CATAMARCA"],
-            "QJ CORDOBA": ["QJ CORDOBA"],
-            "QJ ENTRE RIOS": ["QJ ENTRE RIOS"],
-            "QJ ESCOBAR": ["QJ ESCOBAR"],
-            "QJ LELOIR": ["QJ LELOIR"],
-            "QJ MENDOZA": ["QJ MENDOZA"],
-            "QJ MOTOR ROSARIO": ["QJ MOTOR ROSARIO"],
-            "QJ PILAR": ["QJ PILAR"],
-            "QJ PUERTO MADRYN": ["QJ PUERTO MADRYN"],
-            "QJ QUILMES": ["QJ QUILMES"],
-            "QJ RIO CUARTO": ["QJ RIO CUARTO"],
-            "QJ ROSARIO": ["QJ ROSARIO"],
-            "QJ SALTA": ["QJ SALTA"],
-            "QJ SAN ISIDRO": ["QJ SAN ISIDRO"],
-            "QJ TUCUMAN": ["QJ TUCUMAN"],
-            "QJ VILLA LURO": ["QJ VILLA LURO"],
-            "QJ VILLA MARIA": ["QJ VILLA MARIA"],
-            "ROYAL ENFIELD BAHIA BLANCA": ["ROYAL ENFIELD BAHIA BLANCA"],
-            "ROYAL ENFIELD BANFIELD": ["ROYAL ENFIELD BANFIELD"],
-            "ROYAL ENFIELD BELGRANO CABA": ["ROYAL ENFIELD BELGRANO CABA"],
-            "ROYAL ENFIELD CATAMARCA": ["ROYAL ENFIELD CATAMARCA"],
-            "ROYAL ENFIELD CHACO": ["ROYAL ENFIELD CHACO"],
-            "ROYAL ENFIELD CORDOBA": ["ROYAL ENFIELD CORDOBA"],
-            "ROYAL ENFIELD CORRIENTES": ["ROYAL ENFIELD CORRIENTES"],
-            "ROYAL ENFIELD DEVOTO": ["ROYAL ENFIELD DEVOTO"],
-            "ROYAL ENFIELD JUJUY": ["ROYAL ENFIELD JUJUY"],
-            "ROYAL ENFIELD LA PLATA": ["ROYAL ENFIELD LA PLATA"],
-            "ROYAL ENFIELD LELOIR": ["ROYAL ENFIELD LELOIR"],
-            "ROYAL ENFIELD MADERO": ["ROYAL ENFIELD MADERO"],
-            "ROYAL ENFIELD MAR DEL PLATA": ["ROYAL ENFIELD MAR DEL PLATA"],
-            "ROYAL ENFIELD MENDOZA": ["ROYAL ENFIELD MENDOZA"],
-            "ROYAL ENFIELD NEUQUEN": ["ROYAL ENFIELD NEUQUEN"],
-            "ROYAL ENFIELD PILAR": ["ROYAL ENFIELD PILAR"],
-            "ROYAL ENFIELD RIO CUARTO": ["ROYAL ENFIELD RIO CUARTO"],
-            "ROYAL ENFIELD ROSARIO": ["ROYAL ENFIELD ROSARIO"],
-            "ROYAL ENFIELD SALTA": ["ROYAL ENFIELD SALTA"],
-            "ROYAL ENFIELD SAN JUAN": ["ROYAL ENFIELD SAN JUAN"],
-            "ROYAL ENFIELD SAN NICOLAS": ["ROYAL ENFIELD SAN NICOLAS"],
-            "ROYAL ENFIELD TANDIL": ["ROYAL ENFIELD TANDIL"],
-            "ROYAL ENFIELD TUCUMAN": ["ROYAL ENFIELD TUCUMAN"],
-            "ROYAL ENFIELD VICENTE LOPEZ": ["ROYAL ENFIELD VICENTE LOPEZ"],
-            "VESPA STORE BAHIA BLANCA": ["VESPA STORE BAHIA BLANCA"],
-            "VESPA STORE LA PLATA": ["VESPA STORE LA PLATA"],
-            "VESPA STORE NEUQUEN": ["VESPA STORE NEUQUEN"]
-        },
         "inquiry_reason": {
             "Quiero más información de producto": [
                 "Quiero más información de producto"
@@ -565,24 +486,27 @@ module.exports = {
             ]
         },
         "motivo_de_perdida": {
-            "Precio": [
-                "Precio"
+            "Contactar más adelante": [
+                "Contactar más adelante"
             ],
-            "Producto": [
-                "Producto"
+            "Compré otra marca": [
+                "Compré otra marca"
             ],
             "Financiación": [
                 "Financiación"
             ],
-            "Atención": [
-                "Atención"
+            "Precio": [
+                "Precio"
             ],
-            "Stock": [
-                "Stock"
+            "No es el momento": [
+                "No es el momento"
+            ],
+            "Datos incorrectos": [
+                "Datos incorrectos"
             ],
             "Otro": [
                 "Otro"
             ]
         }
     }
-};
+}

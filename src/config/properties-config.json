@@ -103,6 +103,26 @@
       "groupName": "contactinformation",
       "type": "string",
       "hasVariableOptions": false
+    },
+    {
+      "name": "simpa_contact_info",
+      "description": "Información de respaldo del contacto (cuando falla creación)",
+      "label": "SIMPA Contact Backup",
+      "groupName": "dealinformation",
+      "type": "string",
+      "fieldType": "richtext",
+      "hasVariableOptions": false,
+      "targetObjects": [
+        "deal"
+      ]
+    },
+    {
+      "name": "como_queres_ser_contactado_",
+      "description": "Preferencia de contacto del cliente",
+      "label": "¿Cómo querés ser contactado?",
+      "groupName": "contactinformation",
+      "type": "string",
+      "hasVariableOptions": false
     }
   ],
   "optionsConfig": {
@@ -468,20 +488,23 @@
       ]
     },
     "motivo_de_perdida": {
-      "Precio": [
-        "Precio"
+      "Contactar más adelante": [
+        "Contactar más adelante"
       ],
-      "Producto": [
-        "Producto"
+      "Compré otra marca": [
+        "Compré otra marca"
       ],
       "Financiación": [
         "Financiación"
       ],
-      "Atención": [
-        "Atención"
+      "Precio": [
+        "Precio"
       ],
-      "Stock": [
-        "Stock"
+      "No es el momento": [
+        "No es el momento"
+      ],
+      "Datos incorrectos": [
+        "Datos incorrectos"
       ],
       "Otro": [
         "Otro"

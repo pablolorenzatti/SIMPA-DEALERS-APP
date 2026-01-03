@@ -200,7 +200,10 @@ const LeadProcessor = {
     /**
      * Calcula las propiedades personalizadas a aplicar (Custom Properties)
      */
-    determineCustomProperties(razonSocialConfig, brandName) {
+    /**
+     * Calcula las propiedades personalizadas a aplicar (Custom Properties)
+     */
+    determineCustomProperties(razonSocialConfig, brandName, dealerName) {
         const result = {};
 
         if (!razonSocialConfig || !razonSocialConfig.customProperties) {
@@ -209,25 +212,75 @@ const LeadProcessor = {
 
         const customConfig = razonSocialConfig.customProperties;
 
+        // Helper para procesar valores (seleccionar random si hay comas)
+        const processValue = (val) => {
+            if (typeof val === 'string' && val.includes(',')) {
+                const options = val.split(',').map(s => s.trim()).filter(s => s.length > 0);
+                if (options.length > 0) {
+                    // Selección aleatoria simple
+                    return options[Math.floor(Math.random() * options.length)];
+                }
+            }
+            return val;
+        };
+
         // 1. Propiedades base (nivel superior)
         for (const [key, value] of Object.entries(customConfig)) {
+            if (key === 'default') continue;
+            // Ignorar objetos (marcas)
             if (typeof value !== 'object' || value === null) {
-                result[key] = value;
+                result[key] = processValue(value);
             }
         }
 
         // 2. Propiedades default (bloque 'default')
         if (customConfig.default && typeof customConfig.default === 'object') {
-            Object.assign(result, customConfig.default);
+            for (const [key, value] of Object.entries(customConfig.default)) {
+                result[key] = processValue(value);
+            }
+        }
+
+        // 2.5 Overrides Globales por Dealer
+        if (customConfig._overrides && dealerName) {
+            const dealerNormalized = this.normalizeKey(dealerName);
+            const overrideKey = Object.keys(customConfig._overrides).find(k => this.normalizeKey(k) === dealerNormalized);
+
+            if (overrideKey) {
+                const globalDealerProps = customConfig._overrides[overrideKey];
+                for (const [key, value] of Object.entries(globalDealerProps)) {
+                    result[key] = processValue(value);
+                }
+            }
         }
 
         // 3. Propiedades específicas de marca
+        let brandProps = null;
         if (brandName) {
             const brandNormalized = this.normalizeKey(brandName);
             const brandKey = Object.keys(customConfig).find(k => this.normalizeKey(k) === brandNormalized);
 
             if (brandKey && typeof customConfig[brandKey] === 'object') {
-                Object.assign(result, customConfig[brandKey]);
+                brandProps = customConfig[brandKey];
+                // Aplicar props de marca (excluyendo _overrides y otros objetos anidados)
+                for (const [key, value] of Object.entries(brandProps)) {
+                    if (key === '_overrides') continue;
+                    if (typeof value !== 'object') {
+                        result[key] = processValue(value);
+                    }
+                }
+            }
+        }
+
+        // 4. Overrides por Dealer
+        if (brandProps && brandProps._overrides && dealerName) {
+            const dealerNormalized = this.normalizeKey(dealerName);
+            const overrideKey = Object.keys(brandProps._overrides).find(k => this.normalizeKey(k) === dealerNormalized);
+
+            if (overrideKey) {
+                const dealerProps = brandProps._overrides[overrideKey];
+                for (const [key, value] of Object.entries(dealerProps)) {
+                    result[key] = processValue(value);
+                }
             }
         }
 

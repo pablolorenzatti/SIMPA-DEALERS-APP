@@ -356,6 +356,150 @@ const PropertyMonitorService = {
             console.error('[Sync] Critical Error:', globalError);
             return { success: false, error: 'Internal Error: ' + globalError.message };
         }
+    },
+
+    /**
+     * Devuelve el estado de las propiedades configuradas para una Razón Social específica.
+     */
+    async getPropertiesStatus(razonSocial) {
+        try {
+            // 1. Obtener Token
+            const razones = await ConfigService.getRazonesSociales();
+            const rsConfig = razones[razonSocial];
+            if (!rsConfig) return { success: false, error: 'Razón Social no encontrada' };
+
+            const tokenEnv = rsConfig.tokenEnv;
+            const token = process.env[tokenEnv];
+
+            if (!token) return { success: false, error: 'Token no encontrado en variables de entorno' };
+
+            // 2. Cargar Configuración de Propiedades
+            let propertiesConfig = {};
+            try {
+                propertiesConfig = require('../_config/properties-config');
+            } catch (e) {
+                return { success: false, error: 'Error cargando config de propiedades' };
+            }
+
+            const hubspotClient = new hubspot.Client({ accessToken: token });
+
+            // 3. Obtener Propiedades Existentes de HubSpot
+            const [contactsProps, dealsProps] = await Promise.all([
+                hubspotClient.crm.properties.coreApi.getAll('contacts').catch(e => ({ results: [] })),
+                hubspotClient.crm.properties.coreApi.getAll('deals').catch(e => ({ results: [] }))
+            ]);
+
+            const existingContacts = new Set((contactsProps.results || []).map(p => p.name));
+            const existingDeals = new Set((dealsProps.results || []).map(p => p.name));
+
+            // 4. Comparar
+            const report = [];
+
+            for (const prop of propertiesConfig.baseProperties) {
+                // Determinar target objects
+                let targets = prop.targetObjects || ['contact', 'deal'];
+                if (prop.name === 'id_negocio_simpa') targets = ['deal'];
+
+                // Fallback group logic
+                if (!prop.targetObjects && prop.groupName === 'dealinformation') targets = ['deal'];
+
+                for (const objType of targets) {
+                    const isMissing = objType === 'contact' ? !existingContacts.has(prop.name) : !existingDeals.has(prop.name);
+
+                    report.push({
+                        name: prop.name,
+                        label: prop.label,
+                        type: prop.type,
+                        fieldType: prop.fieldType || 'text',
+                        objectType: objType,
+                        status: isMissing ? 'MISSING' : 'OK',
+                        group: prop.groupName
+                    });
+                }
+            }
+
+            return { success: true, report };
+
+        } catch (error) {
+            console.error('[PropertyMonitor] Error en getPropertiesStatus:', error);
+            return { success: false, error: error.message };
+        }
+    },
+
+    /**
+     * Crea una propiedad faltante para una Razón Social.
+     */
+    async createMissingProperty(razonSocial, propertyName, objectType) {
+        try {
+            const razones = await ConfigService.getRazonesSociales();
+            const rsConfig = razones[razonSocial];
+            if (!rsConfig) return { success: false, error: 'Razón Social no encontrada' };
+            const token = process.env[rsConfig.tokenEnv];
+            if (!token) return { success: false, error: 'Token no disponible/configurado' };
+
+            let propertiesConfig = {};
+            try {
+                propertiesConfig = require('../_config/properties-config');
+            } catch (e) { return { success: false, error: 'Error cargando config' }; }
+
+            const propDef = propertiesConfig.baseProperties.find(p => p.name === propertyName);
+            if (!propDef) return { success: false, error: 'Definición de propiedad no encontrada' };
+
+            const hubspotClient = new hubspot.Client({ accessToken: token });
+
+            const fieldTypeMap = {
+                'string': 'text',
+                'number': 'number',
+                'date': 'date',
+                'datetime': 'text',
+                'enumeration': 'select',
+                'bool': 'booleancheckbox',
+                'richtext': 'html'
+            };
+
+            let fieldType = propDef.fieldType;
+            if (fieldType === 'richtext') fieldType = 'html'; // HubSpot API requires 'html' for rich text
+
+            if (!fieldType) {
+                fieldType = fieldTypeMap[propDef.type] || 'text';
+            }
+
+            let groupName = propDef.groupName;
+            // Si es deal y el grupo es contactinformation, mover a dealinformation (fallback)
+            // HubSpot requiere grupos existentes. 'dealinformation' y 'contactinformation' son standard.
+            if (objectType === 'deal' && groupName === 'contactinformation') {
+                groupName = 'dealinformation';
+            }
+
+            const payload = {
+                name: propDef.name,
+                label: propDef.label,
+                description: propDef.description,
+                groupName: groupName,
+                type: propDef.type,
+                fieldType: fieldType
+            };
+
+            // Solo agregamos opciones si es 'enumeration'. Si hasVariableOptions, inicializar vacio o ver si queremos defaults.
+            // Para simplicidad, creamos sin opciones, el sync global se encargará.
+            // O podemos intentar agregar defaults si existen en optionsConfig, pero es complejo aqui.
+            // HubSpot requiere al menos 1 opción si es 'select' y no se define external options.
+            // PERO si hasVariableOptions es true, probablemente queramos opciones vacías o las del config.
+
+            // Para 'select', aseguremos options array
+            if (payload.fieldType === 'select' || payload.fieldType === 'radio' || payload.fieldType === 'checkbox') {
+                payload.options = [];
+            }
+
+            await hubspotClient.crm.properties.coreApi.create(objectType, payload);
+            console.log(`[PropertyMonitor] Propiedad ${propertyName} creada en ${objectType} para ${razonSocial}`);
+
+            return { success: true };
+
+        } catch (error) {
+            console.error('[PropertyMonitor] Error creando propiedad:', error);
+            return { success: false, error: error.message };
+        }
     }
 };
 

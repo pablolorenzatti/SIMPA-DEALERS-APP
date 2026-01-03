@@ -139,10 +139,11 @@ module.exports = (req, res) => {
                                 </a>
                             </nav>
 
-                            <main class="flex-1 overflow-y-auto p-8 md:p-10 relative min-w-0">
+                            <main class="flex-1 overflow-hidden relative min-w-0 bg-gray-50">
 
                                 <!-- DASHBOARD -->
-                                <div v-if="currentView === 'dashboard'" class="max-w-7xl mx-auto space-y-8">
+                                <div v-if="currentView === 'dashboard'" class="h-full overflow-y-auto p-8 md:p-10">
+                                    <div class="max-w-7xl mx-auto space-y-8">
                                     <!-- Removed top-right period selector -->
 
                                     <!-- Dashboard Header with Controls -->
@@ -385,9 +386,10 @@ module.exports = (req, res) => {
             </div>
         </div>
                     </div >
-                </div >
                 
                 <!-- OTHER VIEWS(Razones, Modelos, Simulator) - Kept same as before but minimal updates -->
+                </div></div>
+                
     <div v-if="currentView === 'razones'" class="h-full flex gap-6">
         <!-- Sidebar list... (Simplified for brevity, same logic) -->
         <div class="w-72 flex flex-col gap-4">
@@ -395,6 +397,9 @@ module.exports = (req, res) => {
                 <input v-model="searchQuery" placeholder="Buscar razón social..." class="w-full text-sm bg-transparent !shadow-none !ring-0 px-2">
             </div>
             <button @click="createNewRazon" class="w-full py-3 bg-black text-white rounded-xl font-medium text-sm shadow-lg">+ Nueva</button>
+            <button @click="resetConfigFromFile" title="Restaurar configuración desde archivo local del servidor" class="w-full py-2 bg-gray-100 hover:bg-gray-200 text-gray-600 rounded-xl font-medium text-xs border border-gray-200 flex items-center justify-center gap-2">
+                <i class="ph ph-arrow-counter-clockwise"></i> Restaurar Defaults
+            </button>
         <div class="flex-1 overflow-y-auto pr-1 space-y-2">
             <div v-for="(rs, key) in filteredRazones" @click="selectRazon(key)" 
                                 :class="['p-4 rounded-xl cursor-pointer transition-all border', selectedRazonKey === key ? 'bg-white border-apple-action shadow-card ring-1 ring-apple-action/20' : 'bg-white border-transparent hover:border-gray-200 text-gray-500']">
@@ -442,7 +447,201 @@ module.exports = (req, res) => {
                                     <button @click="removeBrandFromRazon(brand)" title="Eliminar configuración" class="text-gray-400 hover:text-red-500 hover:bg-red-50 p-2 rounded-lg transition-colors shrink-0"><i class="ph ph-trash"></i></button>
                                 </div>
                             </div >
-                        </div >
+                            
+                            <!-- Custom Properties Section -->
+                            <div v-if="(selectedRazon.brands || []).length > 0" class="bg-gray-50 rounded-2xl p-6 border border-gray-100 mt-4">
+                                <div class="flex justify-between items-center mb-4">
+                                    <p class="text-sm font-semibold text-gray-500 uppercase">Custom Properties</p>
+                                    <button @click="showCustomPropsHelp = !showCustomPropsHelp" class="text-xs text-gray-400 hover:text-gray-600">
+                                        <i class="ph ph-question"></i> Ayuda
+                                    </button>
+                                </div>
+                                <div v-if="showCustomPropsHelp" class="mb-4 p-3 bg-blue-50 border border-blue-100 rounded-lg text-xs text-gray-600">
+                                    <p class="font-semibold mb-1">¿Qué son Custom Properties?</p>
+                                    <p>Permite configurar propiedades personalizadas de HubSpot por marca. Por ejemplo, puedes asignar un propietario específico (hubspot_owner_id) para cada marca.</p>
+                                    <p class="mt-2"><strong>Ejemplo:</strong> hubspot_owner_id = 199509295</p>
+                                </div>
+                                
+                                
+                                <!-- Global Dealer Overrides -->
+                                <div class="bg-indigo-50/50 rounded-2xl p-6 border border-indigo-100 mb-6">
+                                     <div class="flex justify-between items-start mb-4">
+                                         <div>
+                                            <p class="text-sm font-bold text-indigo-900 uppercase tracking-wide">Overrides Globales (Por Concesionario)</p>
+                                            <p class="text-[10px] text-indigo-600 mt-1">Configura propiedades que apliquen a un concesionario para TODAS sus marcas (ej: Owner ID del vendedor).</p>
+                                         </div>
+                                     </div>
+                                     
+                                    <div class="flex gap-2 mb-3">
+                                         <select v-model="newOverrideDealer['_root']" class="flex-1 bg-white border border-indigo-200 text-xs rounded px-2 py-1 focus:ring-2 ring-indigo-500/20 outline-none text-indigo-900">
+                                             <option value="">Seleccionar Concesionario para Override Global...</option>
+                                             <option v-for="d in (selectedRazon.dealers || [])" :value="d">{{d}}</option>
+                                         </select>
+                                         <button @click="addOverride('_root', newOverrideDealer['_root'])" :disabled="!newOverrideDealer['_root']" class="px-3 py-1 bg-indigo-600 hover:bg-indigo-700 text-white rounded text-xs font-medium disabled:opacity-50 transition-colors shadow-sm">
+                                             Agregar Global
+                                         </button>
+                                    </div>
+                                    
+                                    <div v-for="(dealerProps, dealerName) in getOverrides('_root')" :key="dealerName" class="ml-2 pl-3 border-l-2 border-indigo-200 mb-3 bg-white/50 p-2 rounded-r-lg">
+                                        <div class="flex justify-between items-center mb-2">
+                                            <span class="text-xs font-bold text-indigo-800 bg-indigo-100 px-2 py-0.5 rounded border border-indigo-200">{{ dealerName }}</span>
+                                            <button @click="removeOverride('_root', dealerName)" class="text-indigo-300 hover:text-red-500 transition-colors">
+                                                <i class="ph ph-trash text-sm"></i>
+                                            </button>
+                                        </div>
+                                        
+                                        <div class="space-y-2">
+                                            <div v-for="(val, prop) in dealerProps" :key="prop" class="flex gap-2">
+                                                <input :value="prop" @input="renameOverrideProperty('_root', dealerName, prop, $event.target.value)" class="w-1/3 text-[10px] bg-white border border-gray-200 rounded px-2 py-1 focus:border-indigo-300 focus:ring-1 focus:ring-indigo-300" placeholder="Propiedad">
+                                                <input :value="val" @input="setOverrideProperty('_root', dealerName, prop, $event.target.value)" class="flex-1 text-[10px] bg-white border border-gray-200 rounded px-2 py-1 focus:border-indigo-300 focus:ring-1 focus:ring-indigo-300" placeholder="Valor (ej: id1, id2...)">
+                                                <button @click="removeOverrideProperty('_root', dealerName, prop)" class="text-gray-300 hover:text-red-500">
+                                                    <i class="ph ph-x"></i>
+                                                </button>
+                                            </div>
+                                            <button @click="addOverrideProperty('_root', dealerName)" class="text-[10px] text-indigo-600 hover:text-indigo-800 font-medium flex items-center gap-1 mt-1">
+                                                <i class="ph ph-plus-circle"></i> Nueva Propiedad Global
+                                            </button>
+                                        </div>
+                                    </div>
+                                    
+                                    <div v-if="Object.keys(getOverrides('_root')).length === 0" class="text-[10px] text-indigo-400 italic text-center py-2">
+                                        No hay overrides globales configurados
+                                    </div>
+                                </div>
+                                
+                                <div v-for="brand in selectedRazon.brands" :key="'custom-' + brand" class="mb-4 last:mb-0">
+                                    <div class="bg-white p-4 rounded-xl border border-gray-100 shadow-sm">
+                                        <div class="flex items-center justify-between mb-3">
+                                            <div class="font-bold text-sm">{{ brand }}</div>
+                                            <button @click="addCustomProperty(brand)" class="text-xs text-blue-600 hover:text-blue-700 font-medium flex items-center gap-1">
+                                                <i class="ph ph-plus-circle"></i> Agregar Propiedad
+                                            </button>
+                                        </div>
+                                        
+                                        <div v-if="getCustomProperties(brand) && Object.keys(getCustomProperties(brand)).length > 0" class="space-y-2">
+                                            <div v-for="(value, propName) in getCustomProperties(brand)" :key="propName" class="flex items-center gap-2 bg-gray-50 p-2 rounded-lg">
+                                                <input :value="propName" @input="renameCustomProperty(brand, propName, $event.target.value)" placeholder="Nombre propiedad" class="flex-1 bg-white px-3 py-1.5 rounded text-xs border border-gray-200 focus:ring-2 ring-black/5">
+                                                <input :value="value" @input="setCustomProperty(brand, propName, $event.target.value)" placeholder="Valor" class="flex-1 bg-white px-3 py-1.5 rounded text-xs border border-gray-200 focus:ring-2 ring-black/5">
+                                                <button @click="removeCustomProperty(brand, propName)" class="text-gray-400 hover:text-red-500 hover:bg-red-50 p-1.5 rounded transition-colors shrink-0">
+                                                    <i class="ph ph-trash text-sm"></i>
+                                                </button>
+                                            </div>
+                                        </div>
+                                        <div v-else class="text-xs text-gray-400 italic text-center py-2">
+                                            No hay propiedades personalizadas configuradas
+                                        </div>
+                                         <!-- Overrides Section -->
+                                         <div class="mt-4 border-t border-gray-100 pt-4">
+                                            <h4 class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">Concesionarios Específicos (Overrides)</h4>
+                                            
+                                            <div class="mb-3 bg-blue-50 border border-blue-100 rounded-lg p-2 flex gap-2 items-start">
+                                                <i class="ph ph-info text-blue-500 mt-0.5 text-xs"></i>
+                                                <p class="text-[10px] text-blue-700 leading-snug">
+                                                    Para asignar valores rotativos (ej. distribuir leads entre vendedores), ingresa los IDs separados por coma.<br>
+                                                    <span class="font-semibold opacity-80">Ejemplo: 123456, 789012</span> -> El sistema elegirá uno al azar por cada lead.
+                                                </p>
+                                            </div>
+                                            
+                                            <!-- Add Override Selector -->
+                                            <div class="flex gap-2 mb-3">
+                                                 <select v-model="newOverrideDealer[brand]" class="flex-1 bg-white border border-gray-200 text-xs rounded px-2 py-1 focus:ring-2 ring-black/5 outline-none">
+                                                     <option value="">Seleccionar Concesionario...</option>
+                                                     <option v-for="d in (selectedRazon.dealers || [])" :value="d">{{d}}</option>
+                                                 </select>
+                                                 <button @click="addOverride(brand, newOverrideDealer[brand])" :disabled="!newOverrideDealer[brand]" class="px-3 py-1 bg-gray-100 hover:bg-gray-200 text-gray-600 rounded text-xs font-medium disabled:opacity-50">
+                                                     Agregar
+                                                 </button>
+                                            </div>
+                                            
+                                            <!-- List Overrides -->
+                                            <div v-for="(dealerProps, dealerName) in getOverrides(brand)" :key="dealerName" class="ml-2 pl-3 border-l-2 border-gray-100 mb-3">
+                                                <div class="flex justify-between items-center mb-2">
+                                                    <span class="text-xs font-semibold text-gray-700 bg-gray-50 px-2 py-0.5 rounded">{{ dealerName }}</span>
+                                                    <button @click="removeOverride(brand, dealerName)" class="text-gray-300 hover:text-red-500 transition-colors">
+                                                        <i class="ph ph-trash text-sm"></i>
+                                                    </button>
+                                                </div>
+                                                
+                                                <div class="space-y-2">
+                                                    <div v-for="(val, prop) in dealerProps" :key="prop" class="flex gap-2">
+                                                        <input :value="prop" @input="renameOverrideProperty(brand, dealerName, prop, $event.target.value)" class="w-1/3 text-[10px] bg-white border border-gray-200 rounded px-2 py-1" placeholder="Propiedad">
+                                                        <input :value="val" @input="setOverrideProperty(brand, dealerName, prop, $event.target.value)" class="flex-1 text-[10px] bg-white border border-gray-200 rounded px-2 py-1" placeholder="Valor (para rotación: id1, id2...)">
+                                                        <button @click="removeOverrideProperty(brand, dealerName, prop)" class="text-gray-300 hover:text-red-500">
+                                                            <i class="ph ph-x"></i>
+                                                        </button>
+                                                    </div>
+                                                    <button @click="addOverrideProperty(brand, dealerName)" class="text-[10px] text-blue-500 hover:text-blue-600 font-medium flex items-center gap-1">
+                                                        <i class="ph ph-plus"></i> Nueva Propiedad
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                            
+                            <!-- Properties Health Check -->
+                            <div v-if="(selectedRazon.brands || []).length > 0" class="bg-gray-50 rounded-2xl p-6 border border-gray-100 mt-4">
+                                <div class="flex justify-between items-center mb-4">
+                                     <div class="flex flex-col">
+                                        <p class="text-sm font-semibold text-gray-500 uppercase">Diagnóstico de Propiedades</p>
+                                        <p class="text-xs text-gray-400 mt-1">Verifica que las propiedades necesarias existan en la cuenta de HubSpot de esta razón.</p>
+                                     </div>
+                                     <button @click="checkProperties" :disabled="loadingProperties" class="text-xs bg-black text-white hover:bg-gray-800 px-3 py-1.5 rounded-lg font-medium flex items-center gap-1 transition-all shadow-sm">
+                                         <i :class="['ph', loadingProperties ? 'ph-spinner animate-spin' : 'ph-stethoscope']"></i> 
+                                         {{ loadingProperties ? 'Analizando...' : 'Verificar Propiedades' }}
+                                     </button>
+                                </div>
+                                
+                                <div v-if="propertiesStatus" class="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm animate-fade-in-up">
+                                    <div class="p-3 bg-gray-50 border-b border-gray-200 flex justify-between items-center">
+                                        <span class="text-xs font-bold text-gray-700">Resultado del Análisis</span>
+                                        <button @click="propertiesStatus = null" class="text-gray-400 hover:text-gray-600"><i class="ph ph-x"></i></button>
+                                    </div>
+                                    <div class="max-h-60 overflow-y-auto">
+                                        <table class="w-full text-xs">
+                                            <thead class="sticky top-0 bg-white z-10 shadow-sm">
+                                                <tr class="text-left text-gray-500 border-b border-gray-100">
+                                                    <th class="p-3 font-semibold">Propiedad</th>
+                                                    <th class="p-3 font-semibold">Objeto</th>
+                                                    <th class="p-3 font-semibold">Tipo</th>
+                                                    <th class="p-3 font-semibold">Estado</th>
+                                                    <th class="p-3 font-semibold text-right">Acción</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody class="divide-y divide-gray-50">
+                                                <tr v-for="st in propertiesStatus" :key="st.name + st.objectType" class="hover:bg-blue-50/50 transition-colors">
+                                                    <td class="p-3">
+                                                        <div class="font-mono text-gray-800 font-medium">{{ st.name }}</div>
+                                                        <div class="text-[10px] text-gray-400">{{ st.label }}</div>
+                                                    </td>
+                                                    <td class="p-3"><span class="capitalize px-2 py-0.5 bg-gray-100 rounded text-gray-600 font-medium">{{ st.objectType }}</span></td>
+                                                    <td class="p-3 text-gray-500">{{ st.fieldType }}</td>
+                                                    <td class="p-3">
+                                                        <div v-if="st.status === 'OK'" class="inline-flex items-center gap-1 text-green-700 bg-green-50 px-2 py-1 rounded-full font-bold text-[10px] border border-green-100">
+                                                            <i class="ph ph-check"></i> OK
+                                                        </div>
+                                                        <div v-else class="inline-flex items-center gap-1 text-red-700 bg-red-50 px-2 py-1 rounded-full font-bold text-[10px] border border-red-100 animate-pulse">
+                                                            <i class="ph ph-warning"></i> FALTA
+                                                        </div>
+                                                    </td>
+                                                    <td class="p-3 text-right">
+                                                        <button v-if="st.status === 'MISSING'" @click="createProperty(st)" class="text-white bg-blue-600 hover:bg-blue-700 px-2 py-1 rounded shadow-sm text-[10px] font-bold transition-all">
+                                                            Crear Ahora
+                                                        </button>
+                                                    </td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                    
+                                    <div class="p-2 bg-gray-50 text-[10px] text-center text-gray-400 border-t border-gray-200">
+                                        Mostrando {{ propertiesStatus.length }} propiedades verificadas
+                                    </div>
+                                </div>
+                            </div>
+
                         <div class="mt-8">
                              <h3 class="text-lg font-semibold text-gray-900 mb-4">Dealers Whitelist</h3>
                              <div class="flex flex-wrap gap-2 mb-3">
@@ -456,7 +655,7 @@ module.exports = (req, res) => {
                              </div >
                          </div >
                     </div >
-                </div >
+                </div>
 
     <div v-if="currentView === 'modelos'" class="h-full flex gap-6">
         <div class="w-64 bg-white rounded-2xl shadow-card border border-gray-100 overflow-hidden flex flex-col">
@@ -488,7 +687,8 @@ module.exports = (req, res) => {
                     </div >
                 </div >
 
-                <div v-if="currentView === 'simulator'" class="max-w-3xl mx-auto mt-10">
+                <div v-if="currentView === 'simulator'" class="h-full overflow-y-auto p-8 md:p-10">
+                    <div class="max-w-3xl mx-auto mt-10">
                     <div class="bg-white rounded-3xl shadow-soft border border-gray-100 p-10">
                         <h2 class="text-2xl font-bold text-black text-center mb-10">Simulador de Inferencia</h2>
                         <div class="space-y-6 max-w-lg mx-auto">
@@ -500,10 +700,12 @@ module.exports = (req, res) => {
                             <pre class="text-green-400 font-mono text-xs overflow-x-auto">{{ JSON.stringify(simResult, null, 2) }}</pre>
                         </div>
                     </div>
+                    </div>
                 </div>
 
                 <!-- Webhooks / Monitor View -->
-                <div v-if="currentView === 'webhooks'" class="max-w-5xl mx-auto space-y-8">
+                <div v-if="currentView === 'webhooks'" class="h-full overflow-y-auto p-8 md:p-10">
+                    <div class="max-w-5xl mx-auto space-y-8">
                      
                     <!-- Config Section -->
                     <div class="bg-white rounded-3xl shadow-card border border-gray-100 p-8">
@@ -537,8 +739,6 @@ module.exports = (req, res) => {
                                              <i :class="['ph text-gray-400 transition-transform', expandedProp === prop ? 'ph-caret-up' : 'ph-caret-down']"></i>
                                         </div>
                                     </div>
-                                    <div v-if="expandedProp === prop" class="px-4 pb-4 border-t border-gray-100 bg-white p-4">
-                                        
                                     <div v-if="expandedProp === prop" class="px-4 pb-4 border-t border-gray-100 bg-white p-4">
                                         
                                         <!-- APP COMPARISON ALERTS -->
@@ -608,11 +808,11 @@ module.exports = (req, res) => {
                                         <div class="mt-4 pt-4 border-t border-gray-100 flex justify-end text-xs text-gray-400 italic">
                                             Edición y eliminación de opciones deshabilitada en esta vista. Realizar cambios directamente en HubSpot.
                                         </div>
-                                    </div >
-                                </div >
-                             </div >
-                        </div >
-                    </div >
+                                    </div>
+                                </div>
+                             </div>
+                        </div>
+                    </div>
 
                     <!-- Logs Section -->
     <div class="bg-white rounded-3xl shadow-card border border-gray-100 overflow-hidden">
@@ -649,9 +849,11 @@ module.exports = (req, res) => {
         </table>
     </div>
                 
-                </div >
+                </div>
+                </div>
             </main >
-        </div >
+        </div>
+
         
         <!-- LOG DETAILS MODAL -->
         <!-- Added hidden-force class to ensure it is hidden if Vue fails or before load. :class logic removes it. -->
@@ -740,6 +942,10 @@ module.exports = (req, res) => {
         newDealerInput: '',
         simDealer: '', simBrand: '', simResult: null,
         showErrors: true,
+        showCustomPropsHelp: false,
+        propertiesStatus: null,
+            loadingProperties: false,
+            newOverrideDealer: {},
 
         // Webhooks
         monitoredProperties: [],
@@ -885,6 +1091,27 @@ module.exports = (req, res) => {
                         if(brands.length > 0) this.selectedBrandKey = brands[0];
                     } catch(e) {console.error(e); }
                 },
+
+        async resetConfigFromFile() {
+            if(!confirm('¿Estás seguro de restaurar la configuración desde los archivos locales del servidor? Esto SOBREESCRIBIRÁ los cambios actuales en la base de datos.')) return;
+            
+            this.loading = true;
+            try {
+                const res = await fetch('/api/admin/api?action=reset-config', { method: 'POST' });
+                const data = await res.json();
+                if(data.success) {
+                    alert('Configuración restaurada correctamente');
+                    await this.fetchConfig();
+                } else {
+                    alert('Error: ' + data.error);
+                }
+            } catch(e) {
+                console.error(e);
+                alert('Error de red al restaurar configuración');
+            } finally {
+                this.loading = false;
+            }
+        },
 
         async fetchDashboardStats() {
                     try {
@@ -1449,6 +1676,209 @@ module.exports = (req, res) => {
                 },
         addDealer() { if(!this.newDealerInput) return; this.selectedRazon.dealers = this.selectedRazon.dealers || []; this.selectedRazon.dealers.push(this.newDealerInput); this.newDealerInput = ''; this.markDirty(); },
         removeDealer(idx) {this.selectedRazon.dealers.splice(idx, 1); this.markDirty(); },
+        
+        async checkProperties() {
+            if (!this.selectedRazonKey) return;
+            this.loadingProperties = true;
+            this.propertiesStatus = null;
+            try {
+                const response = await fetch('/api/admin/api?action=check-properties', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ razonSocial: this.selectedRazonKey })
+                });
+                const data = await response.json();
+                if (data.success) {
+                    this.propertiesStatus = data.report;
+                } else {
+                    alert('Error verificando propiedades: ' + data.error);
+                }
+            } catch (e) {
+                alert('Error de conexión');
+                console.error(e);
+            } finally {
+                this.loadingProperties = false;
+            }
+        },
+
+        async createProperty(propStatus) {
+            if (!confirm(\`¿Crear propiedad "\${propStatus.name}" en Hubspot (\${propStatus.objectType})?\`)) return;
+            this.loadingProperties = true;
+            try {
+                const response = await fetch('/api/admin/api?action=create-property', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ 
+                        razonSocial: this.selectedRazonKey,
+                        propertyName: propStatus.name,
+                        objectType: propStatus.objectType
+                    })
+                });
+                const data = await response.json();
+                if (data.success) {
+                    alert('Propiedad creada exitosamente');
+                    this.checkProperties();
+                } else {
+                    alert('Error creando propiedad: ' + data.error);
+                    this.loadingProperties = false;
+                }
+            } catch (e) {
+                alert('Error de conexión');
+                this.loadingProperties = false;
+            }
+        },
+        
+        // Custom Properties Logic
+        getCustomProperties(brand) {
+            const props = this.selectedRazon.customProperties?.[brand] || {};
+            const filtered = {};
+            for (const k in props) {
+                if (k !== '_overrides') filtered[k] = props[k];
+            }
+            return filtered;
+        },
+
+        getOverrides(brand) {
+            if (brand === '_root') return this.selectedRazon.customProperties?._overrides || {};
+            return this.selectedRazon.customProperties?.[brand]?._overrides || {};
+        },
+
+        addOverride(brand, dealerName) {
+            if (!dealerName) return;
+            if (!this.selectedRazon.customProperties) this.selectedRazon.customProperties = {};
+            
+            let overridesContainer;
+            if (brand === '_root') {
+                 if (!this.selectedRazon.customProperties._overrides) this.selectedRazon.customProperties._overrides = {};
+                 overridesContainer = this.selectedRazon.customProperties._overrides;
+            } else {
+                if (!this.selectedRazon.customProperties[brand]) this.selectedRazon.customProperties[brand] = {};
+                if (!this.selectedRazon.customProperties[brand]._overrides) this.selectedRazon.customProperties[brand]._overrides = {};
+                overridesContainer = this.selectedRazon.customProperties[brand]._overrides;
+            }
+            
+            if (!overridesContainer[dealerName]) {
+                 overridesContainer[dealerName] = {};
+            }
+            if (!this.newOverrideDealer) this.newOverrideDealer = {};
+            this.newOverrideDealer[brand] = ''; 
+            this.markDirty();
+        },
+
+        removeOverride(brand, dealerName) {
+             if(confirm('¿Eliminar configuración específica para ' + dealerName + '?')) {
+                 if (brand === '_root') {
+                     if (this.selectedRazon.customProperties?._overrides) delete this.selectedRazon.customProperties._overrides[dealerName];
+                 } else {
+                     if (this.selectedRazon.customProperties?.[brand]?._overrides) delete this.selectedRazon.customProperties[brand]._overrides[dealerName];
+                 }
+                 this.markDirty();
+             }
+        },
+
+        _getOverrideObj(brand, dealerName) {
+            if (brand === '_root') return this.selectedRazon.customProperties?._overrides?.[dealerName];
+            return this.selectedRazon.customProperties?.[brand]?._overrides?.[dealerName];
+        },
+
+        addOverrideProperty(brand, dealerName) {
+            const overrides = this._getOverrideObj(brand, dealerName);
+            if (!overrides) return;
+
+            const baseName = 'new_property';
+            let name = baseName;
+            let counter = 1;
+            while (overrides[name] !== undefined) {
+                name = baseName + '_' + counter++;
+            }
+            overrides[name] = '';
+            this.markDirty();
+        },
+
+        setOverrideProperty(brand, dealerName, propName, value) {
+            const overrides = this._getOverrideObj(brand, dealerName);
+            if (overrides) {
+                overrides[propName] = value;
+                this.markDirty();
+            }
+        },
+
+        removeOverrideProperty(brand, dealerName, propName) {
+            const overrides = this._getOverrideObj(brand, dealerName);
+            if (overrides) {
+                delete overrides[propName];
+                this.markDirty();
+            }
+        },
+
+        renameOverrideProperty(brand, dealerName, oldName, newName) {
+            if (!newName || newName === oldName) return;
+            const overrides = this._getOverrideObj(brand, dealerName);
+            if (overrides && overrides[oldName] !== undefined) {
+                const val = overrides[oldName];
+                delete overrides[oldName];
+                overrides[newName] = val;
+                this.markDirty();
+            }
+        },
+        
+        addCustomProperty(brand) {
+            const propName = prompt('Nombre de la propiedad (ej: hubspot_owner_id):');
+            if (!propName) return;
+            
+            if (!this.selectedRazon.customProperties) {
+                this.selectedRazon.customProperties = {};
+            }
+            if (!this.selectedRazon.customProperties[brand]) {
+                this.selectedRazon.customProperties[brand] = {};
+            }
+            
+            this.selectedRazon.customProperties[brand][propName] = '';
+            this.markDirty();
+        },
+        
+        setCustomProperty(brand, propName, value) {
+            if (!this.selectedRazon.customProperties) {
+                this.selectedRazon.customProperties = {};
+            }
+            if (!this.selectedRazon.customProperties[brand]) {
+                this.selectedRazon.customProperties[brand] = {};
+            }
+            
+            this.selectedRazon.customProperties[brand][propName] = value;
+            this.markDirty();
+        },
+        
+        removeCustomProperty(brand, propName) {
+            if (!confirm('¿Eliminar la propiedad "' + propName + '"?')) return;
+            
+            if (this.selectedRazon.customProperties && 
+                this.selectedRazon.customProperties[brand]) {
+                delete this.selectedRazon.customProperties[brand][propName];
+                
+                // Clean up empty objects
+                if (Object.keys(this.selectedRazon.customProperties[brand]).length === 0) {
+                    delete this.selectedRazon.customProperties[brand];
+                }
+                
+                this.markDirty();
+            }
+        },
+        
+        renameCustomProperty(brand, oldName, newName) {
+            if (!newName || newName === oldName) return;
+            
+            if (this.selectedRazon.customProperties && 
+                this.selectedRazon.customProperties[brand] &&
+                this.selectedRazon.customProperties[brand][oldName] !== undefined) {
+                
+                const value = this.selectedRazon.customProperties[brand][oldName];
+                delete this.selectedRazon.customProperties[brand][oldName];
+                this.selectedRazon.customProperties[brand][newName] = value;
+                this.markDirty();
+            }
+        },
+        
         addModel() { if(!this.newModelInput) return; this.modelsByBrand[this.selectedBrandKey].models.push(this.newModelInput); this.newModelInput = ''; this.markDirty(); },
         removeModel(idx) {this.modelsByBrand[this.selectedBrandKey].models.splice(idx, 1); this.markDirty(); },
 
