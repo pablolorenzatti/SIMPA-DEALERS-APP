@@ -2261,5 +2261,6 @@ module.exports = (req, res) => {
     `;
     res.setHeader('Content-Type', 'text/html');
     res.setHeader('Cache-Control', 'no-store, max-age=0');
+    res.setHeader('X-Deployed-At', new Date().toISOString());
     res.status(200).send(html);
 };
