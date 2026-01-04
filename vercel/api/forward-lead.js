@@ -456,8 +456,11 @@ module.exports = async (req, res) => {
     try {
       console.log(`[forward - lead] Creando deal para el contacto ${contactId}...`);
 
+      const contactModel = sanitize(inputFields.contact_model) || '';
+      const contactFullName = `${contactData.firstname || ''} ${contactData.lastname || ''}`.trim() || 'Lead';
+
       const dealProperties = {
-        dealname: `${contactData.firstname || ''} ${contactData.lastname || ''} - ${dealerNameInput} `.trim() || `Lead - ${dealerNameInput} `
+        dealname: `SIMPA - ${contactFullName} - ${dealerNameInput} - ${contactModel}`
       };
 
       // Agregar ID de negocio SIMPA si está disponible
@@ -534,7 +537,7 @@ module.exports = async (req, res) => {
       }
 
       // Usar modelo_simpa para el modelo general (verificar si existe)
-      const contactModel = sanitize(inputFields.contact_model);
+      // contactModel defined above
       if (contactModel) {
         // Usar addOptionToProperty para asegurar opciones en modelo_simpa
         const resultSimpa = await addOptionToProperty(hubspotClient, 'deal', 'modelo_simpa', contactModel);
